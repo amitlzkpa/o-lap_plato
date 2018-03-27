@@ -49,6 +49,12 @@ class OLAPFramework {
 		this.updateGeom();
 	}
 
+	// openFromCollection(name) {
+	// 	var dName = OLAP_DesignCollection[name];
+	// 	if (dName == null) return;
+	// 	var gitLink = OLAP_DesignCollection[name]["git-url"];
+	// }
+
 	clearUI() {
 		this.$ui.empty();
 	}
