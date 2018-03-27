@@ -341,17 +341,6 @@ Design.onParamChange = function(params, group) {
 
 
 Design.updateGeom = function(group) {
-}
-
-
-
-
-
-
-
-
-
-Design.updateGeom_debug = function(debugGroup) {
 
 	var obj = new THREE.Object3D();
 
@@ -527,8 +516,7 @@ Design.updateGeom_debug = function(debugGroup) {
 	// obj.add(new THREE.Line( res[0].toThreeGeometry(), matLine_white ));
 
 
-	debugGroup.add(obj);
-
+	group.add(obj);
 }
 
 
