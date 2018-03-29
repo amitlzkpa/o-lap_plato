@@ -536,3 +536,6 @@ function getIsoCurves(srf, divs) {
 	}
 	return ret;
 }
+
+
+console.log("Loading: " + Design.info.name);
