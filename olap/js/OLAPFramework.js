@@ -49,12 +49,6 @@ class OLAPFramework {
 		this.updateGeom();
 	}
 
-	// openFromCollection(name) {
-	// 	var dName = OLAP_DesignCollection[name];
-	// 	if (dName == null) return;
-	// 	var gitLink = OLAP_DesignCollection[name]["git-url"];
-	// }
-
 	clearUI() {
 		this.$ui.empty();
 	}
@@ -87,7 +81,8 @@ class OLAPFramework {
 		    var value = this.inputVals[key];
 		    inpStateCopy[key] = value;
 		}
-		this.loadedDesign.onParamChange(inpStateCopy, this.geometry);
+		this.loadedDesign.inputState = inpStateCopy;
+		this.loadedDesign.onParamChange(inpStateCopy);
 		this.loadedDesign.updateGeom(this.geometry)
 		this.scene.add(this.geometry);
 	}

@@ -7,8 +7,8 @@
 
   <!-- CSS  -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
-  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="olap/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="olap/css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
 </head>
 <body class="blue-grey lighten-5 no-scroll">
 
@@ -89,25 +89,25 @@
 
 
   <!--  Scripts-->
-  <script src="js/materialize/jquery-3.3.1.min.js"></script>
-  <script src="js/materialize/materialize.min.js"></script>
-  <script src="js/materialize/init.js"></script>
+  <script src="olap/js/materialize/jquery-3.3.1.min.js"></script>
+  <script src="olap/js/materialize/materialize.min.js"></script>
+  <script src="olap/js/materialize/init.js"></script>
 
-  <script src="js/three/three.js"></script>
-  <script src="js/three/verb.js"></script>
-  <script src="js/three/verbToThreeConversion.js"></script>
-  <script src="js/three/Detector.js"></script>
-  <script src="js/three/THREEx.FullScreen.js"></script>
-  <script src="js/three/THREEx.screenshot.js"></script>
-  <script src="js/three/THREEx.WindowResize.js"></script>
-  <script src="js/three/OrbitControls.js"></script>
-  <script src="js/three/threeScene.js"></script>
+  <script src="olap/js/three/three.js"></script>
+  <script src="olap/js/three/verb.js"></script>
+  <script src="olap/js/three/verbToThreeConversion.js"></script>
+  <script src="olap/js/three/Detector.js"></script>
+  <script src="olap/js/three/THREEx.FullScreen.js"></script>
+  <script src="olap/js/three/THREEx.screenshot.js"></script>
+  <script src="olap/js/three/THREEx.WindowResize.js"></script>
+  <script src="olap/js/three/OrbitControls.js"></script>
+  <script src="olap/js/three/threeScene.js"></script>
 
-  <script src="js/OLAPFramework.js"></script>
+  <script src="olap/js/OLAPFramework.js"></script>
   <script src="design/Design.js"></script>
 
   <script type="text/javascript">
-    OLAP.openDesign(Design);
+    if (typeof Design != 'undefined') OLAP.openDesign(Design);
   </script>
 
   </body>
