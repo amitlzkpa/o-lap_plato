@@ -1,6 +1,4 @@
-###### O-LAP Design
+O-LAP Design
 Code and design for [O-LAP](https://o-lap.com)
----
-# Plato
+Plato
 A single seater for your gaming sessions.
----
