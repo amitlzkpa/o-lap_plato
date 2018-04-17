@@ -39,11 +39,16 @@ class OLAPFramework {
 			return;
 		}
 
-
-
 		this.clearUI();
 		this.clearGeometry();
 		this.loadedDesign = designObj;
+		$("#ext-libs").empty();
+		this.loadedDesign.info["ext-libs"].forEach(s => {
+															var $scr = $(`<script src="${s}"></script>`);
+															$("#ext-libs").append($scr);
+															$("#ext-libs").append("<script>function loadDone() { console.log('doneee'); } loadDone(); console.log(prettyDate('2008-01-28T20:24:17Z'));</script>");
+															// $scr.on("click", function() { loadDone(); });
+														});
 		this.loadedDesign.init();
 		this.loadUI();
 		this.updateGeom();

@@ -13,7 +13,11 @@ Design.info = {
 	"short_desc": "A single seater for your gaming sessions.",
 	"long_desc": "",
 	"url": null,
-	"tags": [ "", "" ]
+	"tags": [ "", "" ],
+	"message": null,
+	"ext-libs": [
+					"https://johnresig.com/files/pretty.js"
+				]
 }
 
 
@@ -110,6 +114,8 @@ var activeMat = matMesh_red;
 
 
 function updatePts() {
+
+	console.log(prettyDate("2008-01-28T20:24:17Z"));
 
 	// age alterations - scale the whole design by a factor depending on age
 	var age = Design.inputState.age;
