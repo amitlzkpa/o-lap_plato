@@ -24,7 +24,7 @@ div.large-text {
 
 
 #banner {
-	background-image: url('../imgs/wide_banner.gif');
+	background-image: url('../../imgs/wide_banner.gif');
     background-repeat: no-repeat;
     background-size: cover;
 }

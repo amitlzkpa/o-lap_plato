@@ -7,13 +7,25 @@ function hasMethod(objToChk, methodName) {
 
 
 class OLAPFramework {
+
 	
+	async checkMessage() {
+		var url = "https://gitcdn.xyz/repo/O-LAP/home/master/olap/js/info.json";
+		var infoJSON = await $.getJSON(url);
+		if(this.version != infoJSON.latest_version) {
+			console.log(`${infoJSON.latest_version} is available. Consider upgrading the framework.`);
+		}
+		if(infoJSON.message != "") console.log(infoJSON.message);
+	}
+
 	constructor() {
+		this.version = "1.0.0";
 		this.scene = scene;
 		this.inputs = {};
 		this.$ui = $("#ui");
 		this.$name = $("#design-name");
 		this.$designer = $("#designer");
+		this.$designmessage = $("#design-message");
 		this.$version = $("#version");
 		this.$license = $("#license");
 		this.$short_desc = $("#short-desc");
@@ -28,6 +40,14 @@ class OLAPFramework {
 	}
 
 	openDesign(designObj) {
+
+		this.checkMessage();
+
+		if(!hasMethod(designObj, "init")) {
+			console.log("Design file needs to implement 'init' method to initialize state.");
+			console.log("Aborting design open.");
+			return;
+		}
 		if(!hasMethod(designObj, "onParamChange")) {
 			console.log("Design file needs to implement 'onParamChange' method to recieve updated parameter values.");
 			console.log("Aborting design open.");
@@ -38,8 +58,6 @@ class OLAPFramework {
 			console.log("Aborting design open.");
 			return;
 		}
-
-
 
 		this.clearUI();
 		this.clearGeometry();
@@ -63,6 +81,7 @@ class OLAPFramework {
 		var params = this.loadedDesign.inputs.params;
 		this.$name.text(this.loadedDesign.info.name);
 		this.$designer.text(this.loadedDesign.info.designer);
+		this.$designmessage.text(this.loadedDesign.info.message);
 		this.$version.text(this.loadedDesign.info.version);
 		this.$license.text(this.loadedDesign.info.license);
 		this.$short_desc.text(this.loadedDesign.info.short_desc);
@@ -92,11 +111,13 @@ class OLAPFramework {
 			console.log("Foll registered input doesn't have config: " + id + cnt);
 			return;
 		}
+		let tipTxt = "";
 		switch(inpConfig.type) {
 			case "select":
+				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
 				var html = `<div class="input-field" id="${id}"><select>\n`;
 				for(let s of inpConfig.choices) { html += `<option value="${s}">${s}</option>\n`; }
-				html += `</select><label>${inpConfig.label}</label></div>\n`;
+				html += `</select><label>${inpConfig.label}</label></div>\n${tipTxt}\n`;
 				var p = this.$ui.append(html);
 				$('select').formSelect();										// materilize initialization
 				var fw = this;													// cache ref to framework for passing it to the event listening registration
@@ -106,12 +127,14 @@ class OLAPFramework {
 				});
 				break;
 			case "slider":
+				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
 				var html = `
 						    <div class="range-field">
 							  <p>${inpConfig.label}</p>
 							  <span class="left">${inpConfig.min}</span>
 							  <span class="right">${inpConfig.max}</span>
 						      <input type="range" min="${inpConfig.min}" max="${inpConfig.max}" id="${id}" />
+							  ${tipTxt}
 						    </div>
 							`;
 				var q = this.$ui.append(html);
@@ -122,12 +145,14 @@ class OLAPFramework {
 				});
 				break;
 			case "bool":
+				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
 				var html = `
 						    <p>
 						      <label>
 						        <input type='checkbox' id="${id}"/>
 						        <span>${inpConfig.label}</span>
-						      </label>
+						      </label></br>
+							  ${tipTxt}
 						    </p>
 						    `;
 				var r = this.$ui.append(html);

@@ -35,7 +35,7 @@ function init(){
         35,
         (window.innerWidth * WIDTH_FACTOR) / window.innerHeight,
         1,
-        10000
+        100000
     );
     camera.position.set( -2000, 800, 1200 );
     camera.lookAt( scene.position );
