@@ -13,6 +13,7 @@ Design.info = {
 	"short_desc": "A single seater for your gaming sessions.",
 	"long_desc": "",
 	"url": null,
+	"message": null,
 	"tags": [ "", "" ]
 }
 
