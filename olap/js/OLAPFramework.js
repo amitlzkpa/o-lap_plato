@@ -3,10 +3,108 @@ function hasMethod(objToChk, methodName) {
 	return objToChk && typeof objToChk[methodName] === "function";
 }
 
+function hasProperty(objToChk, propertyName) {
+	return objToChk && typeof objToChk[propertyName] === "object";
+}
+
+
+
+class Slicer {
+	constructor(config) {
+		this.start = new THREE.Vector3(config.start[0], 0, config.start[1]);
+		this.end = new THREE.Vector3(config.end[0], 0, config.end[1]);
+		this.cuts = config.cuts;
+	}
+
+	getSlice(geom) {
+		let retObj = new THREE.Object3D();
+		let m = [];
+		OLAP.getAllMeshes(geom, m);
+		console.log(m);
+		let d = this.end.distanceTo(this.start);
+		let offset = d / this.cuts;
+		let startD = -this.start.distanceTo(new THREE.Vector3());
+
+		var normalVector = new THREE.Vector3();
+		normalVector.subVectors( this.start, this.end );
+        var materialLine = new THREE.LineBasicMaterial({ color: 0x000000 });
+
+        // var planes = [];
+        // planes.push(new THREE.Plane(normalVector, 150));
+        // OLAP.scene.add(new THREE.PlaneHelper(planes[0], 300));
+        // var intersects = new MODE.planeIntersect(m[0].geometry, planes);
+        // var lines = intersects.wireframe(materialLine);
+        // OLAP.scene.add(lines);
+        // console.log(lines);
+
+
+        for (let i = 0; i <= this.cuts; i++) {
+        	console.log(`Cut No: ${i}`);
+	        var planes = [];
+            planes.push(new THREE.Plane(normalVector, (startD + (i * offset))));
+            OLAP.scene.add(new THREE.PlaneHelper(planes[0], 300));
+            var contSet = new THREE.Object3D();
+	        for (let i = 0; i < m.length; i++) {
+		        var intersects = new MODE.planeIntersect(m[i].geometry, planes);
+		        var lines = intersects.wireframe(materialLine);
+		        if(lines.children.length > 0) {
+			        OLAP.scene.add(lines);
+			        console.log(lines);
+		        }
+	        	// contSet.add(lines);
+	        }
+	        // retObj.add(contSet);
+        }
+		return retObj;
+	}
+
+}
+
+
+
+
+class SliceManager {
+
+
+	constructor() {
+		this.slicers = [];
+	}
+
+
+	addSlicer(config) {
+		this.slicers.push(new Slicer(config));
+	}
+
+	getAllSlices(geom) {
+		let retObj = new THREE.Object3D();
+		for(let i=0; i<this.slicers.length; i++) {
+			retObj.add(this.slicers[i].getSlice(geom));
+		}
+		return retObj;
+	}
+
+
+
+}
 
 
 
 class OLAPFramework {
+
+
+
+
+	getAllMeshes(geom, addTo) {
+		if (geom.type == "Mesh") addTo.push(geom);
+		if(geom.children.length == 0) {
+			return;
+		}
+		else {
+			for (let i = 0; i < geom.children.length; i++) {
+				this.getAllMeshes(geom.children[i], addTo);
+			}
+		}
+	}
 
 	
 	async checkMessage() {
@@ -32,6 +130,7 @@ class OLAPFramework {
 		this.loadedDesign = null;
 		this.inputVals = {};
 		this.geometry = new THREE.Object3D();
+		this.sliceManager = new SliceManager();
 
 	    $('#rotate-switch').on('change', function(e) {
 	      var isRot = $(this).is(':checked');
@@ -43,6 +142,21 @@ class OLAPFramework {
 
 		this.checkMessage();
 
+		if(!hasProperty(designObj, "info")) {
+			console.log("Design file needs property 'info' containing design information.");
+			console.log("Aborting design open.");
+			return;
+		}
+		if(!hasProperty(designObj, "inputs")) {
+			console.log("Design file needs property 'inputs' containing design inputs configuration.");
+			console.log("Aborting design open.");
+			return;
+		}
+		if(!hasProperty(designObj, "inputState")) {
+			console.log("Design file needs property 'inputState' to pass down input values.");
+			console.log("Aborting design open.");
+			return;
+		}
 		if(!hasMethod(designObj, "init")) {
 			console.log("Design file needs to implement 'init' method to initialize state.");
 			console.log("Aborting design open.");
@@ -92,6 +206,10 @@ class OLAPFramework {
 		}
 	}
 
+	getSlicer(type) {
+		return new Slicer(type);
+	}
+
 	updateGeom() {
 		this.scene.remove(this.geometry);
 		this.geometry = new THREE.Object3D();
@@ -102,8 +220,10 @@ class OLAPFramework {
 		}
 		this.loadedDesign.inputState = inpStateCopy;
 		this.loadedDesign.onParamChange(inpStateCopy);
-		this.loadedDesign.updateGeom(this.geometry)
+		this.sliceManager = new SliceManager();
+		this.loadedDesign.updateGeom(this.geometry, this.sliceManager)
 		this.scene.add(this.geometry);
+		if (true) this.scene.add(this.sliceManager.getAllSlices(this.geometry));
 	}
 
 	addUIItem(inpConfig, id) {

@@ -331,7 +331,7 @@ Design.init = function() {
 
 
 
-Design.onParamChange = function(params, group) {
+Design.onParamChange = function(params) {
 	this.inputState = params;
 	if (this.inputState.colour == "Red") activeMat = matMesh_red;
 	if (this.inputState.colour == "Blue") activeMat = matMesh_blue;
@@ -341,7 +341,13 @@ Design.onParamChange = function(params, group) {
 
 
 
-Design.updateGeom = function(group) {
+Design.updateGeom = function(group, sliceManager) {
+
+	sliceManager.addSlicer({start: [-300, 0], end: [300, 0], cuts: 7});
+	sliceManager.addSlicer({start: [0, -600], end: [0, 0], cuts: 7});
+
+	// sliceManager.addSlicer({start: [-200, 0], end: [0, 0], cuts: 1});
+
 
 	var obj = new THREE.Object3D();
 
