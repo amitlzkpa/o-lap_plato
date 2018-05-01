@@ -9,52 +9,207 @@ function hasProperty(objToChk, propertyName) {
 
 
 
-class Slicer {
-	constructor(config) {
-		this.start = new THREE.Vector3(config.start[0], 0, config.start[1]);
-		this.end = new THREE.Vector3(config.end[0], 0, config.end[1]);
-		this.cuts = config.cuts;
+class Slice {
+
+	constructor(center, normal, name) {
+		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+			throw "Normal can't be zero for a slice.";
+		}
+		this.name = name;
+		this.center = center;
+		this.normal = normal.normalize();
+		this.plane = new THREE.Plane();
+		this.plane.setFromNormalAndCoplanarPoint(this.normal, this.center).normalize();
+		this.planeGeometry = new THREE.PlaneGeometry(10000, 10000);
+		this.focalPoint = new THREE.Vector3().copy(this.plane.coplanarPoint(new THREE.Vector3())).add(this.plane.normal);
+		this.planeGeometry.lookAt(this.focalPoint);
+		this.planeMaterial = new THREE.MeshBasicMaterial({color: 0xeeeeee, side: THREE.DoubleSide, transparent: true, opacity: 0.2});
+		this.dispPlane = new THREE.Mesh(this.planeGeometry, this.planeMaterial);
+		this.dispPlane.position.set(this.center.x, this.center.y, this.center.z);
+		this.debugViz = new THREE.PlaneHelper( this.plane, 50, 0xaaaaaa );
+		this.debugCenter = new THREE.Mesh( new THREE.SphereGeometry( 12, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff, transparent: true, opacity: 0.5} ) );
+		this.debugCenter.position.set(this.center.x, this.center.y, this.center.z);
+		this.boundaryLines = new THREE.Object3D();
+		this.grooveLines = new THREE.Object3D();
+		// console.log(`Created slice: ${this.name}`);
 	}
 
-	getSlice(geom) {
-		let retObj = new THREE.Object3D();
+	cutBoundaryLines(geom) {
 		let m = [];
 		OLAP.getAllMeshes(geom, m);
-		console.log(m);
-		let d = this.end.distanceTo(this.start);
-		let offset = d / this.cuts;
-		let startD = -this.start.distanceTo(new THREE.Vector3());
 
-		var normalVector = new THREE.Vector3();
-		normalVector.subVectors( this.start, this.end );
-        var materialLine = new THREE.LineBasicMaterial({ color: 0x000000 });
-
-        // var planes = [];
-        // planes.push(new THREE.Plane(normalVector, 150));
-        // OLAP.scene.add(new THREE.PlaneHelper(planes[0], 300));
-        // var intersects = new MODE.planeIntersect(m[0].geometry, planes);
-        // var lines = intersects.wireframe(materialLine);
-        // OLAP.scene.add(lines);
-        // console.log(lines);
-
-
-        for (let i = 0; i <= this.cuts; i++) {
-        	console.log(`Cut No: ${i}`);
-	        var planes = [];
-            planes.push(new THREE.Plane(normalVector, (startD + (i * offset))));
-            OLAP.scene.add(new THREE.PlaneHelper(planes[0], 300));
-            var contSet = new THREE.Object3D();
-	        for (let i = 0; i < m.length; i++) {
-		        var intersects = new MODE.planeIntersect(m[i].geometry, planes);
-		        var lines = intersects.wireframe(materialLine);
-		        if(lines.children.length > 0) {
-			        OLAP.scene.add(lines);
-			        console.log(lines);
-		        }
-	        	// contSet.add(lines);
+		let boundaryCuts = new THREE.Object3D();
+		let repos;
+		let rerot;
+		for (let i = 0; i < m.length; i++) {
+			if(typeof m[i].dontslice == 'boolean' && m[i].dontslice) continue;
+	        let intersects = new MODE.planeIntersect(m[i].geometry, this.plane);
+	        let lines = intersects.wireframe(new THREE.LineBasicMaterial({ color: 0x000000 }));
+	        let l = [];
+	        OLAP.getAllLines(lines, l);
+	        for(let j=0; j<l.length; j++) {
+				boundaryCuts.add(l[j]);
 	        }
-	        // retObj.add(contSet);
-        }
+	        repos = lines.position;
+	        rerot = lines.rotation;
+		}
+		boundaryCuts.position.set(repos.x, repos.y, repos.z);
+		boundaryCuts.rotation.set(rerot.x, rerot.y, rerot.z);
+		this.boundaryLines = boundaryCuts;
+	}
+
+	cutGrooveLines(otherSliceSet) {
+		let grooveCuts = new THREE.Object3D();
+		for (let i = 0; i < otherSliceSet.slices.length; i++) {
+			let otherSlice = otherSliceSet.slices[i];
+			// console.log(`Cutting ${this.name} with ${otherSlice.name}`);
+			if(this.name.includes("U")) {
+				// if(this.name != "U0") continue;
+				let topPts = new Array(otherSliceSet.slices.length);
+				let bottPts = new Array(otherSliceSet.slices.length);
+				let projSrc = new THREE.Vector3(this.center.x, 2000, otherSlice.center.z);
+				// let s = new THREE.Mesh( new THREE.SphereGeometry( 12, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff, transparent: true, opacity: 0.5} ) );
+				// s.position.set(projSrc.x, projSrc.y, projSrc.z);
+				// OLAP.scene.add(s);
+				let projDir = new THREE.Vector3(0, -1, 0);
+				OLAP.scene.add(new THREE.ArrowHelper( projDir, projSrc, 3000, 0xffaaff ));
+				let pln, ptA, ptB, ptC, nrm, lk;
+				for (let j = 0; j < this.boundaryLines.children.length; j++) {
+					let ln = this.boundaryLines.children[j].geometry;
+					for (let k = 0; k < ln.vertices.length; k++) {
+						ptA = ln.vertices[k];
+						ptB = ln.vertices[k+1];
+						ptC = new THREE.Vector3(ptA.x+100, ptA.y, ptA.z);
+						nrm = ptA.clone().cross(ptC);
+						pln = new THREE.Mesh( new THREE.PlaneGeometry( 30, 30, 1 ), new THREE.MeshStandardMaterial( {color: 0xff0000} ) );
+						pln.position.set(ptA.z, ptA.y, ptA.x);
+						// lk = ptA.clone().add(nrm.normalize());
+						// pln.lookAt(lk);
+						pln.rotation.x = -Math.PI/2;
+						// OLAP.scene.add(pln);
+						pln.updateMatrixWorld();
+						let raycaster = new THREE.Raycaster(projSrc, projDir);
+						let int = raycaster.intersectObjects( [pln], true );
+						if(int.length > 0) {
+							let iPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
+							iPt.position.set(int[0].point.x, int[0].point.y, int[0].point.z);
+							OLAP.scene.add( iPt );
+							OLAP.scene.add(pln);
+							if(typeof topPts[i] === 'undefined') {
+								topPts[i] = int[0].point.clone();
+								// OLAP.scene.add( iPt );
+								// OLAP.scene.add(pln);
+								continue;
+							}
+							if(typeof bottPts[i] === 'undefined') {
+								bottPts[i] = int[0].point.clone();
+								// OLAP.scene.add( iPt );
+								// OLAP.scene.add(pln);
+								continue;
+							}
+						}
+					}
+				}
+				let linMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+				let linGeom = new THREE.Geometry();
+				linGeom.vertices.push(
+					new THREE.Vector3( this.center.x, -400, otherSlice.center.z ),
+					new THREE.Vector3( this.center.x, 1400, otherSlice.center.z )
+				);
+				grooveCuts.add(new THREE.Line( linGeom, linMat ));
+				grooveCuts.layers.enable(0);
+				grooveCuts.layers.enable(1);
+				// console.log(topPts);
+				// console.log(bottPts);
+				// console.log('--------');
+			}
+			else {
+				let linMat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+				let linGeom = new THREE.Geometry();
+				linGeom.vertices.push(
+					new THREE.Vector3( otherSlice.center.x, -400, this.center.z ),
+					new THREE.Vector3( otherSlice.center.x, 1400, this.center.z )
+				);
+				grooveCuts.add(new THREE.Line( linGeom, linMat ));
+				grooveCuts.layers.enable(0);
+				grooveCuts.layers.enable(2);
+			}
+		}
+		this.grooveLines = grooveCuts;
+	}
+
+	getSliceObject() {
+		let retObj = new THREE.Object3D();
+		retObj.add(this.boundaryLines);
+		retObj.add(this.grooveLines);
+		return retObj;
+	}
+
+}
+
+
+
+class SliceSet {
+	constructor(config, debug=false) {
+		if(config.uDir) {
+			this.start = new THREE.Vector3(config.start, 0, 0);
+			this.end = new THREE.Vector3(config.end, 0, 0);
+		}
+		else {
+			this.start = new THREE.Vector3(0, 0, config.start);
+			this.end = new THREE.Vector3(0, 0, config.end);
+		}
+		// any slicer will have at least 2 slices; start and end
+		this.cuts = (config.cuts < 2) ? 1 : config.cuts-1;
+		this.debug = debug;
+
+		this.name = (config.uDir) ? "U" : "V";
+
+		this.cutsDir = new THREE.Vector3();
+		this.cutsDir.subVectors( this.end, this.start ).normalize();
+
+		let dist = this.end.distanceTo(this.start);
+		let offset = dist / this.cuts;
+
+		this.slices = [];
+		for (let i = 0; i <= this.cuts; i++) {
+			let dir = this.cutsDir.clone().normalize();
+			dir.multiplyScalar(i * offset);
+			let pos = this.start.clone();
+			pos.add(dir);
+			this.slices.push(new Slice(pos, this.cutsDir, this.name+i));
+		}
+
+	}
+
+
+	getAllSlices(geom, otherSliceSet) {
+
+		let retObj = new THREE.Object3D();
+
+		// let orgPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
+		// retObj.add( orgPt );
+
+		// let startPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0x0000ff} ) );
+		// retObj.add( startPt );
+		// startPt.position.set(this.start.x, this.start.y, this.start.z);
+
+		// let endPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff0000} ) );
+		// retObj.add( endPt );
+		// endPt.position.set(this.end.x, this.end.y, this.end.z);
+
+		// let arrowHelper = new THREE.ArrowHelper( this.cutsDir, this.start, dist, 0x0000ff );
+		// retObj.add( arrowHelper );
+
+		for (let i = 0; i < this.slices.length; i++) {
+			let s = this.slices[i];
+			s.cutBoundaryLines(geom);
+			s.cutGrooveLines(otherSliceSet);
+			// retObj.add(s.dispPlane);
+			// retObj.add(s.debugViz);
+			retObj.add(s.getSliceObject());
+		}
+
 		return retObj;
 	}
 
@@ -64,27 +219,34 @@ class Slicer {
 
 
 class SliceManager {
-
-
 	constructor() {
-		this.slicers = [];
+		this.sliceSetU = null;
+		this.sliceSetV = null;
 	}
 
-
-	addSlicer(config) {
-		this.slicers.push(new Slicer(config));
-	}
-
-	getAllSlices(geom) {
-		let retObj = new THREE.Object3D();
-		for(let i=0; i<this.slicers.length; i++) {
-			retObj.add(this.slicers[i].getSlice(geom));
+	addSliceSet(config) {
+		if(config.uDir === 'undefined' || typeof config.uDir !== 'boolean') {
+			console.log("Error with 'uDir' in slice-set config."); return;
 		}
+		if(config.start === 'undefined' || typeof config.start !== 'number') {
+			console.log("Error with 'start' in slice-set config."); return;
+		}
+		if(config.end === 'undefined' || typeof config.end !== 'number') {
+			console.log("Error with 'end' in slice-set config."); return;
+		}
+		if(config.cuts === 'undefined' || typeof config.cuts !== 'number') {
+			console.log("Error with 'cuts' in slice-set config."); return;
+		}
+		if (config.uDir) this.sliceSetU = new SliceSet(config, true);
+		else this.sliceSetV = new SliceSet(config, true);
+	}
+
+	getAllSlicesFromSet(geom) {
+		let retObj = new THREE.Object3D();
+		if(this.sliceSetU != null) retObj.add(this.sliceSetU.getAllSlices(geom, this.sliceSetV));
+		if(this.sliceSetV != null) retObj.add(this.sliceSetV.getAllSlices(geom, this.sliceSetU));
 		return retObj;
 	}
-
-
-
 }
 
 
@@ -92,7 +254,17 @@ class SliceManager {
 class OLAPFramework {
 
 
-
+	getAllLines(geom, addTo) {
+		if (geom.type == "Line") addTo.push(geom);
+		if(geom.children.length == 0) {
+			return;
+		}
+		else {
+			for (let i = 0; i < geom.children.length; i++) {
+				this.getAllLines(geom.children[i], addTo);
+			}
+		}
+	}
 
 	getAllMeshes(geom, addTo) {
 		if (geom.type == "Mesh") addTo.push(geom);
@@ -106,7 +278,6 @@ class OLAPFramework {
 		}
 	}
 
-	
 	async checkMessage() {
 		var url = "https://gitcdn.xyz/repo/O-LAP/home/master/olap/js/info.json";
 		var infoJSON = await $.getJSON(url);
@@ -127,9 +298,13 @@ class OLAPFramework {
 		this.$version = $("#version");
 		this.$license = $("#license");
 		this.$short_desc = $("#short-desc");
+		$("#download").on('click', function() {
+			OLAP.export();
+		});
 		this.loadedDesign = null;
 		this.inputVals = {};
 		this.geometry = new THREE.Object3D();
+		this.slices = new THREE.Object3D();
 		this.sliceManager = new SliceManager();
 
 	    $('#rotate-switch').on('change', function(e) {
@@ -189,6 +364,8 @@ class OLAPFramework {
 		if (this.geometry == null) return;
 		scene.remove(this.geometry);
 		this.geometry = null;
+		scene.remove(this.slices);
+		this.slices = null;
 	}
 
 	loadUI() {
@@ -206,12 +383,9 @@ class OLAPFramework {
 		}
 	}
 
-	getSlicer(type) {
-		return new Slicer(type);
-	}
-
 	updateGeom() {
 		this.scene.remove(this.geometry);
+		this.scene.remove(this.slices);
 		this.geometry = new THREE.Object3D();
 		var inpStateCopy = {};													// make a copy of input state to pass it to design object
 		for(var key in this.inputVals) {
@@ -223,7 +397,16 @@ class OLAPFramework {
 		this.sliceManager = new SliceManager();
 		this.loadedDesign.updateGeom(this.geometry, this.sliceManager)
 		this.scene.add(this.geometry);
-		if (true) this.scene.add(this.sliceManager.getAllSlices(this.geometry));
+		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
+		// this.slices.children[0].position.x += 1000;
+		this.scene.add(this.slices);
+	}
+
+	export() {
+		let exporter = new THREE.OBJExporter();
+        let result = exporter.parse( scene );
+        let file = new File([result], `olap_${this.loadedDesign.info.name}.obj`, {type: "text/plain"});
+        saveAs(file);
 	}
 
 	addUIItem(inpConfig, id) {
@@ -289,4 +472,91 @@ class OLAPFramework {
 
 
 var OLAP = new OLAPFramework();
+
+
+
+
+
+
+
+
+
+
+// // let pln = new THREE.Mesh( new THREE.PlaneGeometry( 100,100,1,1 ),
+// // let pln = new THREE.Mesh( new THREE.SphereGeometry( 100, 32, 32 ),
+// let pln = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100 ),
+// 		  				  new THREE.MeshBasicMaterial( {color: 0xfff000, transparent: true, opacity: 0.3} ) );
+// pln.rotation.x = -Math.PI / 2;
+// // pln.geometry.verticesNeedUpdate = true;
+// // pln.geometry.normalsNeedUpdate = true;
+// // pln.geometry.computeCentroids();
+// pln.updateMatrix();
+// OLAP.scene.add(pln);
+
+// let projSrc = new THREE.Vector3(4, 300, 4);
+// let projDir = new THREE.Vector3(0, -1, 0);
+// OLAP.scene.add(new THREE.ArrowHelper( projDir, projSrc, 600, 0xffaaff ));
+// let raycaster = new THREE.Raycaster(projSrc, projDir);
+// let int = raycaster.intersectObjects( [pln] );
+// console.log(int);
+// let pt = int[0].point;
+// console.log(pt);
+
+// let iPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
+// OLAP.scene.add( iPt );
+// iPt.position.set(pt.x, pt.y, pt.z);
+
+
+
+
+// var p1s = [];
+// var p2s = [];
+// var p1pl = [];
+// var p2pl = [];
+
+// for (let i = 0; i < 2; i++) {
+// 	let geom = new THREE.PlaneGeometry( 500, 500, 32 );
+// 	let p1 = new THREE.Mesh( geom, new THREE.MeshBasicMaterial( {color: 0xfff000, side: THREE.DoubleSide, transparent: true, opacity: 0.3} ) );
+// 	p1.position.set(0, 0, 100*i);
+// 	p1s.push(p1);
+// 	let pp1pl = new THREE.Plane();
+// 	pp1pl.setFromNormalAndCoplanarPoint(p1.up, p1.position);
+// 	p1pl.push(pp1pl);
+// }
+
+// for (let i = 0; i < 3; i++) {
+// 	let geom = new THREE.PlaneGeometry( 500, 500, 32 );
+// 	let p2 = new THREE.Mesh( geom, new THREE.MeshBasicMaterial( {color: 0x000fff, side: THREE.DoubleSide, transparent: true, opacity: 0.3} ) );
+// 	p2.rotation.x = Math.PI / 2;
+// 	p2.position.set(0, 100*i, 0);
+// 	p2s.push(p2);
+// 	let pp2pl = new THREE.Plane();
+// 	pp2pl.setFromNormalAndCoplanarPoint(p2.up, p2.position);
+// 	p2pl.push(pp2pl);
+// }
+
+// for (let i = 0; i < p1s.length; i++) {
+// 	OLAP.scene.add(p1s[i]);
+// 	OLAP.scene.add(new THREE.PlaneHelper( p1pl[i], 50, 0xaaaaaa ));
+// }
+
+// for (let i = 0; i < p2s.length; i++) {
+// 	OLAP.scene.add(p2s[i]);
+// 	OLAP.scene.add(new THREE.PlaneHelper( p2pl[i], 80, 0xaaaaaa ));
+// }
+
+// let s = new THREE.Object3D();
+// for (let i = 0; i < p2s.length; i++) {
+// 	for (let j = 0; j < p1s.length; j++) {
+// 		let intersects = new MODE.planeIntersect(p2s[i].geometry, p1pl[j]);
+// 		let lines = intersects.wireframe(new THREE.LineBasicMaterial({ color: 0x000000 }));
+// 		s.add(lines);
+// 	}
+// }
+// console.log(s.children.length);
+// OLAP.scene.add(s);
+
+
+
+
 

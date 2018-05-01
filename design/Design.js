@@ -343,10 +343,6 @@ Design.onParamChange = function(params) {
 
 Design.updateGeom = function(group, sliceManager) {
 
-	sliceManager.addSlicer({start: [-300, 0], end: [300, 0], cuts: 7});
-	sliceManager.addSlicer({start: [0, -600], end: [0, 0], cuts: 7});
-
-	// sliceManager.addSlicer({start: [-200, 0], end: [0, 0], cuts: 1});
 
 
 	var obj = new THREE.Object3D();
@@ -402,9 +398,6 @@ Design.updateGeom = function(group, sliceManager) {
 	// obj.add(new THREE.Line( o_ft_mirr.toThreeGeometry(), matLine_black ));
 
 
-
-
-
 	// add surfaces
 	var bs_crv, bk_crv, tp_crv, st_crv, ft_crv;
 
@@ -455,8 +448,10 @@ Design.updateGeom = function(group, sliceManager) {
 
 
 
+	let backmesh = new THREE.Mesh( srf_bk.toThreeGeometry(), activeMat );
 	obj.add(new THREE.Mesh( srf_bs.toThreeGeometry(), activeMat ));
-	obj.add(new THREE.Mesh( srf_bk.toThreeGeometry(), activeMat ));
+	// backmesh.dontslice = true;
+	obj.add(backmesh);
 	obj.add(new THREE.Mesh( srf_tp.toThreeGeometry(), activeMat ));
 	obj.add(new THREE.Mesh( srf_st.toThreeGeometry(), activeMat ));
 	obj.add(new THREE.Mesh( srf_ft.toThreeGeometry(), activeMat ));
@@ -466,7 +461,6 @@ Design.updateGeom = function(group, sliceManager) {
 	// obj.add(new THREE.Mesh( srf_tp.toThreeGeometry(), matMesh_wirewhite ));
 	// obj.add(new THREE.Mesh( srf_st.toThreeGeometry(), matMesh_wirewhite ));
 	// obj.add(new THREE.Mesh( srf_ft.toThreeGeometry(), matMesh_wirewhite ));
-
 
 	// getIsoCurves(srf_bs, 8).forEach(s => obj.add(new THREE.Line( s.toThreeGeometry(), matLine_white )));
 	// getIsoCurves(srf_bk, 8).forEach(s => obj.add(new THREE.Line( s.toThreeGeometry(), matLine_white )));
@@ -499,29 +493,8 @@ Design.updateGeom = function(group, sliceManager) {
 	sideB.position.x = -(i_bs_pts[0][0] * w_mul * w_outerMul);
 	obj.add(sideB);
 
-
-
-
-
-
-
-// 15892829458b1f44ea833022218839ca1275d8d0
-
-
-
-
-	// var p5 = [-1000,	150,	-1000	];
-	// var p6 = [1000,		150,	-1000	];
-	// var p7 = [1000,		150,	1000	];
-	// var p8 = [-1000,	150,	1000	];
-
-	// srf2 = verb.geom.NurbsSurface.byCorners( p5, p6, p7, p8 );
-
-	// obj.add(new THREE.Mesh( srf2.toThreeGeometry(), matMesh_debug ));
-
-	// var res = verb.geom.Intersect.surfaces( srf_bk, srf2, 1e-6 );
-	// obj.add(new THREE.Line( res[0].toThreeGeometry(), matLine_white ));
-
+	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 4});
+	sliceManager.addSliceSet({uDir: false, start: 50, end: 600, cuts: 5});
 
 	group.add(obj);
 }
