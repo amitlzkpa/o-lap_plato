@@ -39,102 +39,74 @@ class Slice {
 		OLAP.getAllMeshes(geom, m);
 
 		let boundaryCuts = new THREE.Object3D();
-		let repos;
-		let rerot;
+		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+		let lineGeom;
 		for (let i = 0; i < m.length; i++) {
 			if(typeof m[i].dontslice == 'boolean' && m[i].dontslice) continue;
 	        let intersects = new MODE.planeIntersect(m[i].geometry, this.plane);
-	        let lines = intersects.wireframe(new THREE.LineBasicMaterial({ color: 0x000000 }));
-	        let l = [];
-	        OLAP.getAllLines(lines, l);
-	        for(let j=0; j<l.length; j++) {
-				boundaryCuts.add(l[j]);
+	        let intersectingLineObjs = intersects.wireframe(lineMat);
+	        let flattenedLines = [];
+	        OLAP.getAllLines(intersectingLineObjs, flattenedLines);
+	        let verts = [];
+	        for(let j=0; j<flattenedLines.length; j++) {
+	        	verts = flattenedLines[j].geometry.vertices;
+	        	lineGeom = new THREE.Geometry();
+	        	for (let j = 0; j < verts.length; j++) {
+	        		lineGeom.vertices.push(intersectingLineObjs.localToWorld(verts[j]));
+	        	}
+	        	let ln = new THREE.Line(lineGeom, lineMat);
+	        	boundaryCuts.add(ln);
 	        }
-	        repos = lines.position;
-	        rerot = lines.rotation;
 		}
-		boundaryCuts.position.set(repos.x, repos.y, repos.z);
-		boundaryCuts.rotation.set(rerot.x, rerot.y, rerot.z);
 		this.boundaryLines = boundaryCuts;
 	}
 
 	cutGrooveLines(otherSliceSet) {
-		let grooveCuts = new THREE.Object3D();
+		let g = new THREE.Group();
 		for (let i = 0; i < otherSliceSet.slices.length; i++) {
 			let otherSlice = otherSliceSet.slices[i];
 			// console.log(`Cutting ${this.name} with ${otherSlice.name}`);
 			if(this.name.includes("U")) {
-				// if(this.name != "U0") continue;
-				let topPts = new Array(otherSliceSet.slices.length);
-				let bottPts = new Array(otherSliceSet.slices.length);
-				let projSrc = new THREE.Vector3(this.center.x, 2000, otherSlice.center.z);
-				// let s = new THREE.Mesh( new THREE.SphereGeometry( 12, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff, transparent: true, opacity: 0.5} ) );
-				// s.position.set(projSrc.x, projSrc.y, projSrc.z);
-				// OLAP.scene.add(s);
+				// if(i != 0 && this.name = "U1z") continue;
+				let projSrc = new THREE.Vector3(-this.center.x, 2000, otherSlice.center.z);
 				let projDir = new THREE.Vector3(0, -1, 0);
-				OLAP.scene.add(new THREE.ArrowHelper( projDir, projSrc, 3000, 0xffaaff ));
-				let pln, ptA, ptB, ptC, nrm, lk;
-				for (let j = 0; j < this.boundaryLines.children.length; j++) {
-					let ln = this.boundaryLines.children[j].geometry;
-					for (let k = 0; k < ln.vertices.length; k++) {
-						ptA = ln.vertices[k];
-						ptB = ln.vertices[k+1];
-						ptC = new THREE.Vector3(ptA.x+100, ptA.y, ptA.z);
-						nrm = ptA.clone().cross(ptC);
-						pln = new THREE.Mesh( new THREE.PlaneGeometry( 30, 30, 1 ), new THREE.MeshStandardMaterial( {color: 0xff0000} ) );
-						pln.position.set(ptA.z, ptA.y, ptA.x);
-						// lk = ptA.clone().add(nrm.normalize());
-						// pln.lookAt(lk);
-						pln.rotation.x = -Math.PI/2;
-						// OLAP.scene.add(pln);
-						pln.updateMatrixWorld();
-						let raycaster = new THREE.Raycaster(projSrc, projDir);
-						let int = raycaster.intersectObjects( [pln], true );
-						if(int.length > 0) {
-							let iPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
-							iPt.position.set(int[0].point.x, int[0].point.y, int[0].point.z);
-							OLAP.scene.add( iPt );
-							OLAP.scene.add(pln);
-							if(typeof topPts[i] === 'undefined') {
-								topPts[i] = int[0].point.clone();
-								// OLAP.scene.add( iPt );
-								// OLAP.scene.add(pln);
-								continue;
-							}
-							if(typeof bottPts[i] === 'undefined') {
-								bottPts[i] = int[0].point.clone();
-								// OLAP.scene.add( iPt );
-								// OLAP.scene.add(pln);
-								continue;
-							}
-						}
-					}
+				let lns = this.boundaryLines.children;
+				let raycaster = new THREE.Raycaster(projSrc, projDir);
+				raycaster.linePrecision = 0.05;
+				let intersections = raycaster.intersectObjects( lns, true );
+				if(intersections.length < 2) {
+					continue;
 				}
+				let topPt = intersections[0].point;
+				let botPt = intersections[1].point;
+				let midPt = new THREE.Vector3((topPt.x+botPt.x)/2, (topPt.y+botPt.y)/2, (topPt.z+botPt.z)/2);
 				let linMat = new THREE.LineBasicMaterial({ color: 0xff0000 });
 				let linGeom = new THREE.Geometry();
-				linGeom.vertices.push(
-					new THREE.Vector3( this.center.x, -400, otherSlice.center.z ),
-					new THREE.Vector3( this.center.x, 1400, otherSlice.center.z )
-				);
-				grooveCuts.add(new THREE.Line( linGeom, linMat ));
-				grooveCuts.layers.enable(0);
-				grooveCuts.layers.enable(1);
-				// console.log(topPts);
-				// console.log(bottPts);
-				// console.log('--------');
+				linGeom.vertices.push( topPt, midPt );
+				g.add(new THREE.Line( linGeom, linMat ));
 			}
 			else {
+				// if(i != 0 && this.name != "V4z") continue;
+				let projSrc = new THREE.Vector3(-otherSlice.center.x, -2000, this.center.z);
+				let projDir = new THREE.Vector3(0, 1, 0);
+				let lns = this.boundaryLines.children;
+				let raycaster = new THREE.Raycaster(projSrc, projDir);
+				raycaster.linePrecision = 0.05;
+				let intersections = raycaster.intersectObjects( lns, true );
+				if(intersections.length < 2) {
+					continue;
+				}
+				let topPt = intersections[0].point;
+				let botPt = intersections[1].point;
+				let midPt = new THREE.Vector3((topPt.x+botPt.x)/2, (topPt.y+botPt.y)/2, (topPt.z+botPt.z)/2);
 				let linMat = new THREE.LineBasicMaterial({ color: 0x0000ff });
 				let linGeom = new THREE.Geometry();
-				linGeom.vertices.push(
-					new THREE.Vector3( otherSlice.center.x, -400, this.center.z ),
-					new THREE.Vector3( otherSlice.center.x, 1400, this.center.z )
-				);
-				grooveCuts.add(new THREE.Line( linGeom, linMat ));
-				grooveCuts.layers.enable(0);
-				grooveCuts.layers.enable(2);
+				linGeom.vertices.push( topPt, midPt );
+				g.add(new THREE.Line( linGeom, linMat ));
 			}
 		}
+		let grooveCuts = new THREE.Object3D();
+		grooveCuts.add(g);
 		this.grooveLines = grooveCuts;
 	}
 
@@ -207,7 +179,9 @@ class SliceSet {
 			s.cutGrooveLines(otherSliceSet);
 			// retObj.add(s.dispPlane);
 			// retObj.add(s.debugViz);
-			retObj.add(s.getSliceObject());
+			let q = s.getSliceObject();
+			// q.position.x += 600;
+			retObj.add(q);
 		}
 
 		return retObj;
