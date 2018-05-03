@@ -493,8 +493,8 @@ Design.updateGeom = function(group, sliceManager) {
 	sideB.position.x = -(i_bs_pts[0][0] * w_mul * w_outerMul);
 	obj.add(sideB);
 
-	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 4});
-	sliceManager.addSliceSet({uDir: false, start: 50, end: 600, cuts: 5});
+	sliceManager.addSliceSet({uDir: true, start: -400, end: 400, cuts: 7});
+	sliceManager.addSliceSet({uDir: false, start: -50, end: 600, cuts: 6});
 
 	group.add(obj);
 }
