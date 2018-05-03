@@ -31,7 +31,6 @@ class Slice {
 		this.debugCenter.position.set(this.center.x, this.center.y, this.center.z);
 		this.boundaryLines = new THREE.Object3D();
 		this.grooveLines = new THREE.Object3D();
-		// console.log(`Created slice: ${this.name}`);
 	}
 
 	cutBoundaryLines(geom) {
@@ -65,9 +64,7 @@ class Slice {
 		let g = new THREE.Group();
 		for (let i = 0; i < otherSliceSet.slices.length; i++) {
 			let otherSlice = otherSliceSet.slices[i];
-			// console.log(`Cutting ${this.name} with ${otherSlice.name}`);
 			if(this.name.includes("U")) {
-				// if(i != 0 && this.name = "U1z") continue;
 				let projSrc = new THREE.Vector3(-this.center.x, 2000, otherSlice.center.z);
 				let projDir = new THREE.Vector3(0, -1, 0);
 				let lns = this.boundaryLines.children;
@@ -86,7 +83,6 @@ class Slice {
 				g.add(new THREE.Line( linGeom, linMat ));
 			}
 			else {
-				// if(i != 0 && this.name != "V4z") continue;
 				let projSrc = new THREE.Vector3(-otherSlice.center.x, -2000, this.center.z);
 				let projDir = new THREE.Vector3(0, 1, 0);
 				let lns = this.boundaryLines.children;
@@ -158,30 +154,13 @@ class SliceSet {
 	getAllSlices(geom, otherSliceSet) {
 
 		let retObj = new THREE.Object3D();
-
-		// let orgPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
-		// retObj.add( orgPt );
-
-		// let startPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0x0000ff} ) );
-		// retObj.add( startPt );
-		// startPt.position.set(this.start.x, this.start.y, this.start.z);
-
-		// let endPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff0000} ) );
-		// retObj.add( endPt );
-		// endPt.position.set(this.end.x, this.end.y, this.end.z);
-
-		// let arrowHelper = new THREE.ArrowHelper( this.cutsDir, this.start, dist, 0x0000ff );
-		// retObj.add( arrowHelper );
-
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
 			s.cutGrooveLines(otherSliceSet);
 			// retObj.add(s.dispPlane);
 			// retObj.add(s.debugViz);
-			let q = s.getSliceObject();
-			// q.position.x += 600;
-			retObj.add(q);
+			retObj.add(s.getSliceObject());
 		}
 
 		return retObj;
@@ -446,91 +425,4 @@ class OLAPFramework {
 
 
 var OLAP = new OLAPFramework();
-
-
-
-
-
-
-
-
-
-
-// // let pln = new THREE.Mesh( new THREE.PlaneGeometry( 100,100,1,1 ),
-// // let pln = new THREE.Mesh( new THREE.SphereGeometry( 100, 32, 32 ),
-// let pln = new THREE.Mesh( new THREE.BoxGeometry( 100, 100, 100 ),
-// 		  				  new THREE.MeshBasicMaterial( {color: 0xfff000, transparent: true, opacity: 0.3} ) );
-// pln.rotation.x = -Math.PI / 2;
-// // pln.geometry.verticesNeedUpdate = true;
-// // pln.geometry.normalsNeedUpdate = true;
-// // pln.geometry.computeCentroids();
-// pln.updateMatrix();
-// OLAP.scene.add(pln);
-
-// let projSrc = new THREE.Vector3(4, 300, 4);
-// let projDir = new THREE.Vector3(0, -1, 0);
-// OLAP.scene.add(new THREE.ArrowHelper( projDir, projSrc, 600, 0xffaaff ));
-// let raycaster = new THREE.Raycaster(projSrc, projDir);
-// let int = raycaster.intersectObjects( [pln] );
-// console.log(int);
-// let pt = int[0].point;
-// console.log(pt);
-
-// let iPt = new THREE.Mesh( new THREE.SphereGeometry( 10, 8, 8 ), new THREE.MeshBasicMaterial( {color: 0xff00ff} ) );
-// OLAP.scene.add( iPt );
-// iPt.position.set(pt.x, pt.y, pt.z);
-
-
-
-
-// var p1s = [];
-// var p2s = [];
-// var p1pl = [];
-// var p2pl = [];
-
-// for (let i = 0; i < 2; i++) {
-// 	let geom = new THREE.PlaneGeometry( 500, 500, 32 );
-// 	let p1 = new THREE.Mesh( geom, new THREE.MeshBasicMaterial( {color: 0xfff000, side: THREE.DoubleSide, transparent: true, opacity: 0.3} ) );
-// 	p1.position.set(0, 0, 100*i);
-// 	p1s.push(p1);
-// 	let pp1pl = new THREE.Plane();
-// 	pp1pl.setFromNormalAndCoplanarPoint(p1.up, p1.position);
-// 	p1pl.push(pp1pl);
-// }
-
-// for (let i = 0; i < 3; i++) {
-// 	let geom = new THREE.PlaneGeometry( 500, 500, 32 );
-// 	let p2 = new THREE.Mesh( geom, new THREE.MeshBasicMaterial( {color: 0x000fff, side: THREE.DoubleSide, transparent: true, opacity: 0.3} ) );
-// 	p2.rotation.x = Math.PI / 2;
-// 	p2.position.set(0, 100*i, 0);
-// 	p2s.push(p2);
-// 	let pp2pl = new THREE.Plane();
-// 	pp2pl.setFromNormalAndCoplanarPoint(p2.up, p2.position);
-// 	p2pl.push(pp2pl);
-// }
-
-// for (let i = 0; i < p1s.length; i++) {
-// 	OLAP.scene.add(p1s[i]);
-// 	OLAP.scene.add(new THREE.PlaneHelper( p1pl[i], 50, 0xaaaaaa ));
-// }
-
-// for (let i = 0; i < p2s.length; i++) {
-// 	OLAP.scene.add(p2s[i]);
-// 	OLAP.scene.add(new THREE.PlaneHelper( p2pl[i], 80, 0xaaaaaa ));
-// }
-
-// let s = new THREE.Object3D();
-// for (let i = 0; i < p2s.length; i++) {
-// 	for (let j = 0; j < p1s.length; j++) {
-// 		let intersects = new MODE.planeIntersect(p2s[i].geometry, p1pl[j]);
-// 		let lines = intersects.wireframe(new THREE.LineBasicMaterial({ color: 0x000000 }));
-// 		s.add(lines);
-// 	}
-// }
-// console.log(s.children.length);
-// OLAP.scene.add(s);
-
-
-
-
 
