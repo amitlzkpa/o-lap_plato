@@ -21,7 +21,9 @@ Design.info = {
 
 Design.inputs = {
 
-	"params": ["age", "weight", "high-back", "colour", "roo"],
+
+	"params": ["age", "weight", "high-back", "colour" ],
+
 
 	"age": { 
 		"type": "slider",
@@ -47,13 +49,9 @@ Design.inputs = {
 		"label": "Colour",
 		"default": "red",
 		"choices": ["Red", "Blue", "Green"]
-	},
-	"roo": {
-		"type": "select",
-		"label": "Gooey",
-		"default": "x",
-		"choices": ["x", "y", "z"]
 	}
+
+
 }
 
 
