@@ -259,10 +259,19 @@ class OLAPFramework {
 		this.geometry = new THREE.Object3D();
 		this.slices = new THREE.Object3D();
 		this.sliceManager = new SliceManager();
+		this.showSec = false;
+		this.humanGeom = new THREE.Object3D();
 
 	    $('#rotate-switch').on('change', function(e) {
-	      var isRot = $(this).is(':checked');
+	      let isRot = $(this).is(':checked');
 	      cameraControls.autoRotate = isRot;
+	    });
+	    $('#sections-switch').on('change', function(e) {
+	      OLAP.showSec = $(this).is(':checked');
+	      OLAP.updateGeom();
+	    });
+	    $('#human-switch').on('change', function(e) {
+	      OLAP.updateHuman($(this).is(':checked'));
 	    });
 	}
 
@@ -350,9 +359,11 @@ class OLAPFramework {
 		this.sliceManager = new SliceManager();
 		this.loadedDesign.updateGeom(this.geometry, this.sliceManager)
 		this.scene.add(this.geometry);
-		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
-		// this.slices.children[0].position.x += 1000;
-		this.scene.add(this.slices);
+		if(this.showSec) {
+			this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
+			// this.slices.children[0].position.x += 1000;
+			this.scene.add(this.slices);
+		}
 	}
 
 	export() {
@@ -360,6 +371,20 @@ class OLAPFramework {
         let result = exporter.parse( scene );
         let file = new File([result], `olap_${this.loadedDesign.info.name}.obj`, {type: "text/plain"});
         saveAs(file);
+	}
+
+	updateHuman(isSeen) {
+		this.scene.remove(this.humanGeom);
+		this.humanGeom = new THREE.Object3D();
+		if(isSeen) {
+			let objLoader = new THREE.OBJLoader();
+			objLoader.setPath('./olap/files/');
+		    objLoader.load('denace.obj', function (object) {
+		    	this.humanGeom.add(object);
+				this.scene.add(this.humanGeom);
+		        // this.humanGeom.position.y -= 60;		 
+		    });
+		}
 	}
 
 	addUIItem(inpConfig, id) {

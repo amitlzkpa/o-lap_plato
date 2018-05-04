@@ -46,7 +46,7 @@ function init(){
 	cameraControls.autoRotate = false;
 
 	var gridHelper = new THREE.GridHelper(10000, 100);
-	// scene.add(gridHelper);
+	scene.add(gridHelper);
 
 	// transparently support window resize
 	THREEx.WindowResize.bind(renderer, camera, WIDTH_FACTOR);
