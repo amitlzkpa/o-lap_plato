@@ -240,6 +240,69 @@ class OLAPFramework {
 		if(infoJSON.message != "") console.log(infoJSON.message);
 	}
 
+	async downloadHumans() {
+		let url, model, objLoader;
+		url = "https://raw.githubusercontent.com/amitlzkpa/o-lap_page/master/olap/files/denace.obj";
+		model = await $.get(url);
+		objLoader = new THREE.OBJLoader();
+		objLoader.setPath(url);
+	    objLoader.load(model, function (object) {
+		    object.traverse( function ( child ) {
+		        if ( child instanceof THREE.Mesh ) {
+		            child.material = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide, color: 0xBEBEBE, transparent: true, opacity: 0.3, shininess: 0.1, specular: 0x000000 } );
+		        }
+		    });
+			OLAP.maleModel = new THREE.Object3D();
+	    	OLAP.maleModel.add(object);
+	    });
+		url = "https://raw.githubusercontent.com/amitlzkpa/o-lap_page/master/olap/files/bianca.obj";
+		model = await $.get(url);
+		objLoader = new THREE.OBJLoader();
+		objLoader.setPath(url);
+	    objLoader.load(model, function (object) {
+		    object.traverse( function ( child ) {
+		        if ( child instanceof THREE.Mesh ) {
+		            child.material = new THREE.MeshPhongMaterial( { side: THREE.DoubleSide, color: 0xBEBEBE, transparent: true, opacity: 0.3, shininess: 0.1, specular: 0x000000 } );
+		        }
+		    });
+			OLAP.femaleModel = new THREE.Object3D();
+	    	OLAP.femaleModel.add(object);
+	    });
+	    OLAP.activeHumanGeom = new THREE.Object3D();
+    	OLAP.activeHumanGeom.add(OLAP.maleModel);
+	}
+
+	updateHuman(isSeen) {
+		this.scene.remove(this.activeHumanGeom);
+	    this.activeHumanGeom = new THREE.Object3D();
+		if(this.showGirl) {
+	    	this.activeHumanGeom.add(this.femaleModel);
+		}
+		else {
+	    	this.activeHumanGeom.add(this.maleModel);
+		}
+		if(this.showHumans) {
+			this.scene.add(this.activeHumanGeom);
+			let geomBB = new THREE.Box3();
+			geomBB.expandByObject(this.geometry);
+			let posV = new THREE.Vector3(geomBB.min.x, 0, geomBB.min.z);
+			let offset = posV.clone().normalize().multiplyScalar(300);
+			posV.add(offset);
+			this.activeHumanGeom.position.set(posV.x, posV.y, posV.z);
+		}
+	}
+
+	export() {
+		let exporter = new THREE.OBJExporter();
+		let exp = new THREE.Object3D();
+		let g = OLAP.geometry.clone();
+		exp.add(g);
+		if (OLAP.showSec) exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
+        let result = exporter.parse( exp );
+        let file = new File([result], `olap_${this.loadedDesign.info.name}.obj`, {type: "text/plain"});
+        saveAs(file);
+	}
+
 	constructor() {
 		this.version = "1.0.0";
 		this.scene = scene;
@@ -257,10 +320,16 @@ class OLAPFramework {
 		this.loadedDesign = null;
 		this.inputVals = {};
 		this.geometry = new THREE.Object3D();
+		this.bounds = new THREE.Object3D();
 		this.slices = new THREE.Object3D();
 		this.sliceManager = new SliceManager();
 		this.showSec = false;
-		this.humanGeom = new THREE.Object3D();
+		this.maleModel = new THREE.Object3D();
+		this.femaleModel = new THREE.Object3D();
+		this.activeHumanGeom = new THREE.Object3D();
+		this.showHumans = false;
+		this.showGirl = false;
+		this.downloadHumans();
 
 	    $('#rotate-switch').on('change', function(e) {
 	      let isRot = $(this).is(':checked');
@@ -271,7 +340,12 @@ class OLAPFramework {
 	      OLAP.updateGeom();
 	    });
 	    $('#human-switch').on('change', function(e) {
-	      OLAP.updateHuman($(this).is(':checked'));
+	    	OLAP.showHumans = $(this).is(':checked');
+	    	OLAP.updateHuman();
+	    });
+	    $('#gender-switch').on('change', function(e) {
+	    	OLAP.showGirl = ($(this).is(':checked'));
+			OLAP.updateHuman();
 	    });
 	}
 
@@ -349,6 +423,7 @@ class OLAPFramework {
 		this.scene.remove(this.geometry);
 		this.scene.remove(this.slices);
 		this.geometry = new THREE.Object3D();
+		this.bounds = new THREE.Object3D();
 		var inpStateCopy = {};													// make a copy of input state to pass it to design object
 		for(var key in this.inputVals) {
 		    var value = this.inputVals[key];
@@ -361,29 +436,7 @@ class OLAPFramework {
 		this.scene.add(this.geometry);
 		if(this.showSec) {
 			this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
-			// this.slices.children[0].position.x += 1000;
 			this.scene.add(this.slices);
-		}
-	}
-
-	export() {
-		let exporter = new THREE.OBJExporter();
-        let result = exporter.parse( scene );
-        let file = new File([result], `olap_${this.loadedDesign.info.name}.obj`, {type: "text/plain"});
-        saveAs(file);
-	}
-
-	updateHuman(isSeen) {
-		this.scene.remove(this.humanGeom);
-		this.humanGeom = new THREE.Object3D();
-		if(isSeen) {
-			let objLoader = new THREE.OBJLoader();
-			objLoader.setPath('./olap/files/');
-		    objLoader.load('denace.obj', function (object) {
-		    	this.humanGeom.add(object);
-				this.scene.add(this.humanGeom);
-		        // this.humanGeom.position.y -= 60;		 
-		    });
 		}
 	}
 
