@@ -242,7 +242,7 @@ class OLAPFramework {
 
 	async downloadHumans() {
 		let url, model, objLoader;
-		url = "https://raw.githubusercontent.com/amitlzkpa/o-lap_page/master/olap/files/denace.obj";
+		url = "https://raw.githubusercontent.com/O-LAP/home/master/olap/files/denace.obj";
 		model = await $.get(url);
 		objLoader = new THREE.OBJLoader();
 		objLoader.setPath(url);
@@ -255,7 +255,7 @@ class OLAPFramework {
 			OLAP.maleModel = new THREE.Object3D();
 	    	OLAP.maleModel.add(object);
 	    });
-		url = "https://raw.githubusercontent.com/amitlzkpa/o-lap_page/master/olap/files/bianca.obj";
+		url = "https://raw.githubusercontent.com/O-LAP/home/master/olap/files/bianca.objj";
 		model = await $.get(url);
 		objLoader = new THREE.OBJLoader();
 		objLoader.setPath(url);
