@@ -22,9 +22,6 @@ Design.info = {
 Design.inputs = {
 
 
-	"params": ["age", "weight", "high-back", "colour" ],
-
-
 	"age": { 
 		"type": "slider",
 		"label": "Age",
