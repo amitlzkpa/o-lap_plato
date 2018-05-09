@@ -34,7 +34,7 @@ Design.inputs = {
 		"label": "Weight(kilos, you need to get fit if its more than this)",
 		"default": 65,
 		"min": 30,
-		"max": 150
+		"max": 300
 	},
 	"high-back": {
 		"type": "bool",
