@@ -1,4 +1,4 @@
-
+	
 
 
 
@@ -8,7 +8,7 @@ var Design = {};
 Design.info = {
 	"name": "Plato",
 	"designer": "Amit Nambiar",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"license": "MIT",
 	"short_desc": "A single seater for your gaming sessions.",
 	"long_desc": "",
@@ -31,7 +31,7 @@ Design.inputs = {
 	},
 	"weight": { 
 		"type": "slider",
-		"label": "Weight",
+		"label": "Weight(kilos, you need to get fit if its more tha this)",
 		"default": 65,
 		"min": 30,
 		"max": 150
