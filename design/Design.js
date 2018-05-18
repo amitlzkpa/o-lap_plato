@@ -31,10 +31,10 @@ Design.inputs = {
 	},
 	"weight": { 
 		"type": "slider",
-		"label": "Weight(kilos, you need to get fit if its more than this)",
+		"label": "Weight(in kg)",
 		"default": 65,
 		"min": 30,
-		"max": 300
+		"max": 200
 	},
 	"high-back": {
 		"type": "bool",
