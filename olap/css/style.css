@@ -15,7 +15,7 @@
 
 
 div.large-text {
-	font-size: 2em;
+	font-size: 1.5em;
 }
 
 .row {
@@ -25,8 +25,9 @@ div.large-text {
 
 #banner {
 	background-image: url('../../imgs/wide_banner.gif');
-    background-repeat: no-repeat;
-    background-size: cover;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: center; 
 }
 
 
@@ -72,15 +73,6 @@ div.large-text {
 
 
 
-#download {
-	background-color: #e0e0e0;
-	width: 100%;
-	border-radius: 2px;
-	padding: 6px;
-}
-#download:hover {
-	background-color: #bdbdbd;
-}
 
 .dl-divider {
 	margin: 10px 0px 10px 0px;
@@ -90,14 +82,14 @@ div.large-text {
 
 
 #design-ui {
-	height: 49vh;
+	height: 300px;
 	overflow-x: hidden;
 	overflow-y: auto;
 }
 
 
 #scene-ui {
-	height: 20vh;
+	height: 100px;
 }
 
 
@@ -129,4 +121,36 @@ div.large-text {
 }
 .tabs .indicator {
 	background-color:#616161;
+}
+
+
+
+
+
+
+
+#mc-embedded-subscribe{
+	color: #FFFFFF;
+	width: 300px;
+	font-style: italic;
+}
+
+
+#mce-EMAIL {
+	color: #FFFFFF;
+	text-align: center;
+}
+
+
+
+
+
+body {
+	display: flex;
+	min-height: 100vh;
+	flex-direction: column;
+}
+
+main {
+	flex: 1 0 auto;
 }

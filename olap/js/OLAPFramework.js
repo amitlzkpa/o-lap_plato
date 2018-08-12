@@ -157,8 +157,10 @@ class SliceSet {
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
 			s.cutGrooveLines(otherSliceSet);
-			// retObj.add(s.dispPlane);
-			// retObj.add(s.debugViz);
+			if(this.debug) {
+				retObj.add(s.dispPlane);
+				retObj.add(s.debugViz);
+			}
 			retObj.add(s.getSliceObject());
 		}
 
@@ -189,8 +191,8 @@ class SliceManager {
 		if(config.cuts === 'undefined' || typeof config.cuts !== 'number') {
 			console.log("Error with 'cuts' in slice-set config."); return;
 		}
-		if (config.uDir) this.sliceSetU = new SliceSet(config, true);
-		else this.sliceSetV = new SliceSet(config, true);
+		if (config.uDir) this.sliceSetU = new SliceSet(config);
+		else this.sliceSetV = new SliceSet(config);
 	}
 
 	getAllSlicesFromSet(geom) {
@@ -237,7 +239,7 @@ class OLAPFramework {
 			if(this.version != infoJSON.latest_version) {
 				console.log(`${infoJSON.latest_version} is available. Consider upgrading the framework.`);
 			}
-			console.log(infoJSON.message);
+			if(this.version != "") console.log(infoJSON.message);
 		}
 		catch(e) {
 			console.log("O-LAP update check failed.");
@@ -307,6 +309,32 @@ class OLAPFramework {
         saveAs(file);
 	}
 
+	async order() {
+        let name = $('#order-name').val();
+        let address = $('#order-address').val();
+        let contact = $('#order-contact').val();
+        let message = $('#order-message').val();
+		let exporter = new THREE.OBJExporter();
+		let exp = new THREE.Object3D();
+		let g = OLAP.geometry.clone();
+		exp.add(g);
+		if (OLAP.showSec) exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
+        let data = exporter.parse( exp );
+        let ordDet = 	{
+							name: name,
+							address: address,
+							contact: contact,
+							message: message,
+							data: 'data'
+						};
+        // console.log('Submitting to: ' + postURL);
+        let ord = $.post(OLAP.dbBaseUrl + '/add', ordDet);
+        // console.log(ord);
+         M.toast({html: 'Order submitted. We will get back with more details.'})
+        // $('#order-form').html(`Order submitted. We will get back with more details.`);
+
+	}
+
 	constructor() {
 		this.version = "1.0.0";
 		this.scene = scene;
@@ -319,8 +347,13 @@ class OLAPFramework {
 		this.$license = $("#license");
 		this.$short_desc = $("#short-desc");
 		this.$commit_history = $("#commitHistory");
+		// this.dbBaseUrl = `http://127.0.0.1:4000`;
+		this.dbBaseUrl = `https://o-lap-database.herokuapp.com`;
 		$("#download").on('click', function() {
 			OLAP.export();
+		});
+		$("#order-submit-btn").on('click', function() {
+			OLAP.order();
 		});
 		this.loadedDesign = null;
 		this.inputVals = {};
@@ -523,4 +556,5 @@ class OLAPFramework {
 
 
 var OLAP = new OLAPFramework();
+
 
