@@ -105,7 +105,7 @@ var add_age_z = 0;
 var activeMat = matMesh_red;
 
 
-function updatePts() {
+async function updatePts() {
 
 	// age alterations - scale the whole design by a factor depending on age
 	var age = Design.inputState.age;
@@ -321,22 +321,19 @@ var o_ft_pts_mirr = JSON.parse(JSON.stringify(o_ft_pts_mirr_start));
 
 
 
-Design.init = function() {
+Design.init = async function() {
 }
 
 
 
-Design.onParamChange = function(params) {
+Design.updateGeom = async function(group, params, sliceManager) {
+
+
 	this.inputState = params;
 	if (this.inputState.colour == "Red") activeMat = matMesh_red;
 	if (this.inputState.colour == "Blue") activeMat = matMesh_blue;
 	if (this.inputState.colour == "Green") activeMat = matMesh_green;
-	updatePts();
-}
-
-
-
-Design.updateGeom = function(group, sliceManager) {
+	await updatePts();
 
 
 
