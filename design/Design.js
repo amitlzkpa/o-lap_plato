@@ -335,8 +335,6 @@ Design.updateGeom = async function(group, params, sliceManager) {
 	if (this.inputState.colour == "Green") activeMat = matMesh_green;
 	await updatePts();
 
-	console.log(this.inputState);
-
 
 	var obj = new THREE.Object3D();
 
@@ -485,8 +483,6 @@ Design.updateGeom = async function(group, params, sliceManager) {
 	sideB.rotation.set(Math.PI / 2, Math.PI / 2, 0);
 	sideB.position.x = -(i_bs_pts[0][0] * w_mul * w_outerMul);
 	obj.add(sideB);
-
-	console.log(sliceManager);
 
 	sliceManager.addSliceSet({uDir: true, start: -400, end: 400, cuts: 7});
 	sliceManager.addSliceSet({uDir: false, start: -50, end: 600, cuts: 6});
