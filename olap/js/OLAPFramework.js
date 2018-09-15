@@ -330,20 +330,25 @@ class OLAPFramework {
 		let exp = new THREE.Object3D();
 		let g = OLAP.geometry.clone();
 		exp.add(g);
-		if (OLAP.showSec) exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
-        let data = exporter.parse( exp );
+		exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
+        let model = exporter.parse( exp );
+        let params = this.loadedDesign.inputState;
         let ordDet = 	{
 							name: name,
 							address: address,
 							contact: contact,
 							message: message,
-							data: 'data'
+							model: model,
+							params: params
 						};
-        // console.log('Submitting to: ' + postURL);
-        let ord = $.post(OLAP.dbBaseUrl + '/add', ordDet);
-        // console.log(ord);
-         M.toast({html: 'Order submitted. We will get back with more details.'})
-        // $('#order-form').html(`Order submitted. We will get back with more details.`);
+        $.post(OLAP.dbBaseUrl + '/orders/add', ordDet).then(function(data) {
+	        if (data == 'OK') {
+		        M.toast({html: 'Order submitted. We will get back with more details.'});
+	        }
+	        else {
+	        	M.toast({html: 'Order failed. Please mail us the file at olapdesign@gmail.com.'});
+	        }
+        });
 
 	}
 
