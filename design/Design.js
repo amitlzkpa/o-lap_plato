@@ -326,10 +326,9 @@ Design.init = async function() {
 
 
 
-Design.updateGeom = async function(group, params, sliceManager) {
+Design.updateGeom = async function(group, sliceManager) {
 
 
-	this.inputState = params;
 	if (this.inputState.colour == "Red") activeMat = matMesh_red;
 	if (this.inputState.colour == "Blue") activeMat = matMesh_blue;
 	if (this.inputState.colour == "Green") activeMat = matMesh_green;
