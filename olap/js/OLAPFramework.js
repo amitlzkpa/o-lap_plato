@@ -60,7 +60,9 @@ class Slice {
 		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
 		let lineGeom;
 		for (let i = 0; i < m.length; i++) {
-			if(typeof m[i].dontslice == 'boolean' && m[i].dontslice) continue;
+			if(m[i].dontslice) continue;
+			let int = OLAP.intersectPlane(m[i].geometry, this.plane);
+
 	        let intersects = new MODE.planeIntersect(m[i].geometry, this.plane);
 	        let intersectingLineObjs = intersects.wireframe(lineMat);
 	        let flattenedLines = [];
@@ -180,9 +182,10 @@ class SliceSet {
 			this.start = new THREE.Vector3(0, 0, config.start);
 			this.end = new THREE.Vector3(0, 0, config.end);
 		}
+
 		// any slicer will have at least 2 slices; start and end
 		this.cuts = (config.cuts < 2) ? 1 : config.cuts-1;
-		this.debug = false;
+		this.debug = true;
 
 		this.name = (config.uDir) ? "U" : "V";
 
@@ -276,7 +279,6 @@ class SliceManager {
 			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geom, this.sliceSetU));
 			flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geom, this.sliceSetU));
 		}
-		flatSlices.position.set(1000, 0, 1000);
 		retObj.add(inPosSlices);
 		retObj.add(flatSlices);
 		return retObj;
@@ -286,6 +288,21 @@ class SliceManager {
 
 
 class OLAPFramework {
+
+
+	intersectPlane(geom, plane) {
+		console.log('intersectPlane');
+
+		// let verts = geom.vertices;
+		// let faces = [];
+		// let face = null;
+		// geom.faces.forEach(f => {
+		// 	face = [verts[f.a].clone(), verts[f.b].clone(), verts[f.c].clone()];
+		// 	faces.push(face);
+		// });
+		// console.log(face);
+
+	}
 
 
 	getAllLines(geom, addTo) {
