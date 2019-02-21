@@ -55,6 +55,8 @@ class Slice {
 	cutBoundaryLines(geom) {
 		let m = [];
 		OLAP.getAllMeshes(geom, m);
+		console.log(geom);
+
 
 		let boundaryCuts = new THREE.Object3D();
 		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
@@ -184,7 +186,7 @@ class SliceSet {
 		}
 
 		// any slicer will have at least 2 slices; start and end
-		this.cuts = (config.cuts < 2) ? 1 : config.cuts-1;
+		this.cuts = config.cuts;
 		this.debug = true;
 
 		this.name = (config.uDir) ? "U" : "V";
@@ -196,7 +198,7 @@ class SliceSet {
 		let offset = dist / this.cuts;
 
 		this.slices = [];
-		for (let i = 0; i <= this.cuts; i++) {
+		for (let i = 0; i < this.cuts; i++) {
 			let dir = this.cutsDir.clone().normalize();
 			dir.multiplyScalar(i * offset);
 			let pos = this.start.clone();
@@ -211,7 +213,7 @@ class SliceSet {
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
-			s.cutGrooveLines(otherSliceSet);
+			// s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
 				retObj.add(s.dispPlane);
 				retObj.add(s.debugViz);
@@ -226,7 +228,7 @@ class SliceSet {
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
-			s.cutGrooveLines(otherSliceSet);
+			// s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
 				retObj.add(s.dispPlane);
 				retObj.add(s.debugViz);
@@ -404,6 +406,7 @@ class OLAPFramework {
 		let exporter = new THREE.OBJExporter();
 		let exp = new THREE.Object3D();
 		let g = OLAP.geometry.clone();
+		console.log(g);
 		exp.add(g);
 		exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
         let result = exporter.parse( exp );

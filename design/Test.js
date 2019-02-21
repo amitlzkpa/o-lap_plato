@@ -86,8 +86,8 @@ Design.updateGeom = async function(group, sliceManager) {
 		scene.add(instance);
 	}
 
-	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 3});
-	sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 4});
+	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 1});
+	// sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 2});
 
 	instance.scale.x = Design.inputState.width;
 	instance.scale.z = Design.inputState.breadth;
