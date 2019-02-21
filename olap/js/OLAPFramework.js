@@ -55,7 +55,6 @@ class Slice {
 	cutBoundaryLines(geom) {
 		let m = [];
 		OLAP.getAllMeshes(geom, m);
-		console.log(geom);
 
 
 		let boundaryCuts = new THREE.Object3D();
@@ -228,7 +227,7 @@ class SliceSet {
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
-			// s.cutGrooveLines(otherSliceSet);
+			s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
 				retObj.add(s.dispPlane);
 				retObj.add(s.debugViz);
@@ -275,11 +274,11 @@ class SliceManager {
 		let flatSlices = new THREE.Object3D();
 		if(this.sliceSetU != null) {
 			inPosSlices.add(this.sliceSetU.getAllInPosSlices(geom, this.sliceSetV));
-			flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geom, this.sliceSetV));
+			// flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geom, this.sliceSetV));
 		}
 		if(this.sliceSetV != null) {
 			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geom, this.sliceSetU));
-			flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geom, this.sliceSetU));
+			// flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geom, this.sliceSetU));
 		}
 		retObj.add(inPosSlices);
 		retObj.add(flatSlices);
@@ -293,7 +292,7 @@ class OLAPFramework {
 
 
 	intersectPlane(geom, plane) {
-		console.log('intersectPlane');
+		// console.log('intersectPlane');
 
 		// let verts = geom.vertices;
 		// let faces = [];
@@ -321,7 +320,7 @@ class OLAPFramework {
 
 	getAllMeshes(geom, addTo) {
 		if (geom.type == "Mesh") addTo.push(geom);
-		if(geom.children.length == 0) {
+		if (geom.children.length == 0) {
 			return;
 		}
 		else {
@@ -406,7 +405,6 @@ class OLAPFramework {
 		let exporter = new THREE.OBJExporter();
 		let exp = new THREE.Object3D();
 		let g = OLAP.geometry.clone();
-		console.log(g);
 		exp.add(g);
 		exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
         let result = exporter.parse( exp );
@@ -592,9 +590,11 @@ class OLAPFramework {
 		this.sliceManager = new SliceManager();
 		await this.loadedDesign.updateGeom(this.geometry, this.sliceManager);
 		this.scene.add(this.geometry);
+
+		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
+		this.scene.add(this.slices);
+
 		if(this.showSec) {
-			this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
-			this.scene.add(this.slices);
 		}
 	}
 

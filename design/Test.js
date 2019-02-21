@@ -67,7 +67,8 @@ function map_range(value, low1, high1, low2, high2, interp="lin") {
 
 
 var activeMat = matMesh_red;
-var instance = null;
+// var instance = null;
+
 
 
 
@@ -79,19 +80,34 @@ Design.init = async function() {
 Design.updateGeom = async function(group, sliceManager) {
 
 
-	if (instance == null) {
-		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-		instance = new THREE.Mesh( geometry, activeMat );
-		instance.scale.y = 600;
-		scene.add(instance);
-	}
+	let g1, g2, g3;
+	let instance = new THREE.Object3D();
+
+	g1 = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 1 ), matMesh_red );
+	instance.add(g1);
+	g2 = new THREE.Mesh( new THREE.BoxGeometry( 1.8, 1.4, 0.3 ), matMesh_green );
+	instance.add(g2);
+	g3 = new THREE.Mesh( new THREE.SphereGeometry( 0.4, 64, 64 ), matMesh_blue );
+	g3.position.x = -0.2;
+	g3.position.z = 1;
+	instance.add(g3);
+
+	instance = instance;
+	instance.scale.y = 600;
+	group.add(instance);
 
 	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 1});
 	// sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 2});
 
-	instance.scale.x = Design.inputState.width;
-	instance.scale.z = Design.inputState.breadth;
+	instance.scale.x = parseInt(Design.inputState.width);
+	instance.scale.z = parseInt(Design.inputState.breadth);
 
+
+	// console.log("Test.js --->");
+
+	// console.log(instance);
+
+	// console.log("<-- Test.js");
 
 }
 
