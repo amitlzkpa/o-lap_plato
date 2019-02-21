@@ -52,9 +52,9 @@ class Slice {
 		this.grooveLines = new THREE.Object3D();
 	}
 
-	cutBoundaryLines(geom) {
+	cutBoundaryLines(geoms) {
 		let m = [];
-		OLAP.getAllMeshes(geom, m);
+		OLAP.getAllMeshes(geoms, m);
 
 
 		let boundaryCuts = new THREE.Object3D();
@@ -214,11 +214,11 @@ class SliceSet {
 
 	}
 
-	getAllInPosSlices(geom, otherSliceSet) {
+	getAllInPosSlices(geoms, otherSliceSet) {
 		let retObj = new THREE.Object3D();
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
-			s.cutBoundaryLines(geom);
+			s.cutBoundaryLines(geoms);
 			// s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
 				retObj.add(s.dispPlane);
@@ -229,11 +229,11 @@ class SliceSet {
 		return retObj;
 	}
 
-	getAllFlattenedSlices(geom, otherSliceSet) {
+	getAllFlattenedSlices(geoms, otherSliceSet) {
 		let retObj = new THREE.Object3D();
 		for (let i = 0; i < this.slices.length; i++) {
 			let s = this.slices[i];
-			s.cutBoundaryLines(geom);
+			s.cutBoundaryLines(geoms);
 			s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
 				retObj.add(s.dispPlane);
@@ -275,17 +275,17 @@ class SliceManager {
 		else this.sliceSetV = new SliceSet(config);
 	}
 
-	getAllSlicesFromSet(geom) {
+	getAllSlicesFromSet(geoms) {
 		let retObj = new THREE.Object3D();
 		let inPosSlices = new THREE.Object3D();
 		let flatSlices = new THREE.Object3D();
 		if(this.sliceSetU != null) {
-			inPosSlices.add(this.sliceSetU.getAllInPosSlices(geom, this.sliceSetV));
-			// flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geom, this.sliceSetV));
+			inPosSlices.add(this.sliceSetU.getAllInPosSlices(geoms, this.sliceSetV));
+			// flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geoms, this.sliceSetV));
 		}
 		if(this.sliceSetV != null) {
-			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geom, this.sliceSetU));
-			// flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geom, this.sliceSetU));
+			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geoms, this.sliceSetU));
+			// flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geoms, this.sliceSetU));
 		}
 		retObj.add(inPosSlices);
 		retObj.add(flatSlices);
@@ -298,20 +298,25 @@ class SliceManager {
 class OLAPFramework {
 
 
-	intersectPlane(meshObj, plane) {
+	intersectPlane(mesh, plane) {
 
-		let mesh = meshObj.children[0];
-		mesh.scale.set(meshObj.scale.x, meshObj.scale.y, meshObj.scale.z);
+		let meshObj = mesh.parent;
+		// multiply by scaling factor of parent object if its an Object3D
+		if (mesh.parent && mesh.parent.type === "Object3D") {
+			mesh.scale.set(	meshObj.scale.x * mesh.scale.x,
+							meshObj.scale.y * mesh.scale.y,
+							meshObj.scale.z * mesh.scale.z );
+		}
 
 		let meshverts = [];
 
+		let v;
 		mesh.updateMatrixWorld();
-		let v
-		for(let i=0; i<mesh.geometry.vertices.length; i++) {
-			v = mesh.geometry.vertices[i].clone();
+		mesh.geometry.vertices.forEach(vt => {
+			v = vt.clone();
 			v.applyMatrix4(mesh.matrixWorld);
 			meshverts.push(v);
-		}
+		});
 
 		let faces = [];
 		let face = null;
@@ -356,9 +361,10 @@ class OLAPFramework {
 		}
 	}
 
+	// relies on 
 	getAllMeshes(geom, addTo) {
 		if (geom.type == "Mesh") {
-			addTo.push(geom.parent);
+			addTo.push(geom);
 		}
 		if (geom.children.length == 0) {
 			return;
@@ -629,8 +635,6 @@ class OLAPFramework {
 		this.loadedDesign.inputState = inpStateCopy;
 		this.sliceManager = new SliceManager();
 		await this.loadedDesign.updateGeom(this.geometry, this.sliceManager);
-		this.geometry = this.geometry.children[0];
-		// console.log(this.geometry.children[0]);
 		this.scene.add(this.geometry);
 
 		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);

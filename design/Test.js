@@ -77,7 +77,28 @@ Design.init = async function() {
 
 
 
-Design.updateGeom = async function(group, sliceManager) {
+
+
+
+
+
+
+
+
+// no nested meshes
+// no nested object3d
+
+
+// THREE.Object3D(objectContainer) 
+// 	THREE.Object3D
+// 		THREE.Mesh
+// 	THREE.Object3D
+// 		THREE.Mesh
+// 	THREE.Object3D
+// 		THREE.Mesh
+
+
+Design.updateGeom = async function(objectContainer, sliceManager) {
 
 
 	let g1, g2, g3;
@@ -94,7 +115,7 @@ Design.updateGeom = async function(group, sliceManager) {
 
 	instance = instance;
 	instance.scale.y = 600;
-	group.add(instance);
+	objectContainer.add(instance);
 
 	sliceManager.addSliceSet({uDir: true, start: -200, end: 200, cuts: 1});
 	// sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 2});
