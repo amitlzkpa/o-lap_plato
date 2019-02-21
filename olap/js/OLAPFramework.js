@@ -62,22 +62,29 @@ class Slice {
 		let lineGeom;
 		for (let i = 0; i < m.length; i++) {
 			if(m[i].dontslice) continue;
-			let int = OLAP.intersectPlane(m[i].geometry, this.plane);
+			let int = OLAP.intersectPlane(m[i], this.plane);
+			// console.log(int);
 
-	        let intersects = new MODE.planeIntersect(m[i].geometry, this.plane);
-	        let intersectingLineObjs = intersects.wireframe(lineMat);
-	        let flattenedLines = [];
-	        OLAP.getAllLines(intersectingLineObjs, flattenedLines);
-	        let verts = [];
-	        for(let j=0; j<flattenedLines.length; j++) {
-	        	verts = flattenedLines[j].geometry.vertices;
-	        	lineGeom = new THREE.Geometry();
-	        	for (let j = 0; j < verts.length; j++) {
-	        		lineGeom.vertices.push(intersectingLineObjs.localToWorld(verts[j]));
-	        	}
-	        	let ln = new THREE.Line(lineGeom, lineMat);
-	        	boundaryCuts.add(ln);
-	        }
+
+
+
+	        // let intersects = new MODE.planeIntersect(m[i].geometry, this.plane);
+	        // let intersectingLineObjs = intersects.wireframe(lineMat);
+	        // let flattenedLines = [];
+	        // OLAP.getAllLines(intersectingLineObjs, flattenedLines);
+	        // let meshverts = [];
+	        // for(let j=0; j<flattenedLines.length; j++) {
+	        // 	meshverts = flattenedLines[j].geometry.vertices;
+	        // 	lineGeom = new THREE.Geometry();
+	        // 	for (let j = 0; j < meshverts.length; j++) {
+	        // 		lineGeom.vertices.push(intersectingLineObjs.localToWorld(meshverts[j]));
+	        // 	}
+	        // 	let ln = new THREE.Line(lineGeom, lineMat);
+	        // 	boundaryCuts.add(ln);
+	        // }
+
+
+
 		}
 		this.boundaryLines = boundaryCuts;
 	}
@@ -291,17 +298,48 @@ class SliceManager {
 class OLAPFramework {
 
 
-	intersectPlane(geom, plane) {
-		// console.log('intersectPlane');
+	intersectPlane(meshObj, plane) {
 
-		// let verts = geom.vertices;
-		// let faces = [];
-		// let face = null;
-		// geom.faces.forEach(f => {
-		// 	face = [verts[f.a].clone(), verts[f.b].clone(), verts[f.c].clone()];
-		// 	faces.push(face);
-		// });
-		// console.log(face);
+		let mesh = meshObj.children[0];
+		mesh.scale.set(meshObj.scale.x, meshObj.scale.y, meshObj.scale.z);
+
+		let meshverts = [];
+
+		mesh.updateMatrixWorld();
+		let v
+		for(let i=0; i<mesh.geometry.vertices.length; i++) {
+			v = mesh.geometry.vertices[i].clone();
+			v.applyMatrix4(mesh.matrixWorld);
+			meshverts.push(v);
+		}
+
+		let faces = [];
+		let face = null;
+		mesh.geometry.faces.forEach(f => {
+			face = [meshverts[f.a].clone(), meshverts[f.b].clone(), meshverts[f.c].clone()];
+			faces.push(face);
+		});
+
+		let intVerts = [];
+		faces.forEach(f => {
+			let ln, pt;
+			ln = new THREE.Line3(f[0], f[2]);
+			pt = plane.intersectLine(ln);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
+			}
+			ln = new THREE.Line3(f[0], f[1]);
+			pt = plane.intersectLine(ln);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
+			}
+			ln = new THREE.Line3(f[1], f[2]);
+			pt = plane.intersectLine(ln);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
+			}
+		});
+		console.log(intVerts);
 
 	}
 
@@ -319,7 +357,9 @@ class OLAPFramework {
 	}
 
 	getAllMeshes(geom, addTo) {
-		if (geom.type == "Mesh") addTo.push(geom);
+		if (geom.type == "Mesh") {
+			addTo.push(geom.parent);
+		}
 		if (geom.children.length == 0) {
 			return;
 		}
@@ -589,6 +629,8 @@ class OLAPFramework {
 		this.loadedDesign.inputState = inpStateCopy;
 		this.sliceManager = new SliceManager();
 		await this.loadedDesign.updateGeom(this.geometry, this.sliceManager);
+		this.geometry = this.geometry.children[0];
+		// console.log(this.geometry.children[0]);
 		this.scene.add(this.geometry);
 
 		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);

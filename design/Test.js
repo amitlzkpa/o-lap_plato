@@ -85,12 +85,12 @@ Design.updateGeom = async function(group, sliceManager) {
 
 	g1 = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 1 ), matMesh_red );
 	instance.add(g1);
-	g2 = new THREE.Mesh( new THREE.BoxGeometry( 1.8, 1.4, 0.3 ), matMesh_green );
-	instance.add(g2);
-	g3 = new THREE.Mesh( new THREE.SphereGeometry( 0.4, 64, 64 ), matMesh_blue );
-	g3.position.x = -0.2;
-	g3.position.z = 1;
-	instance.add(g3);
+	// g2 = new THREE.Mesh( new THREE.BoxGeometry( 1.8, 1.4, 0.3 ), matMesh_green );
+	// instance.add(g2);
+	// g3 = new THREE.Mesh( new THREE.SphereGeometry( 0.4, 64, 64 ), matMesh_blue );
+	// g3.position.x = -0.2;
+	// g3.position.z = 1;
+	// instance.add(g3);
 
 	instance = instance;
 	instance.scale.y = 600;
