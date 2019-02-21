@@ -62,8 +62,9 @@ class Slice {
 		let lineGeom;
 		for (let i = 0; i < m.length; i++) {
 			if(m[i].dontslice) continue;
-			let int = OLAP.intersectPlane(m[i], this.plane);
-			// console.log(int);
+			let lineGeom = OLAP.intersectPlane(m[i], this.plane);
+			let line = new THREE.Line(lineGeom, lineMat);
+			boundaryCuts.add(line);
 
 
 
@@ -344,7 +345,10 @@ class OLAPFramework {
 				intVerts.push(pt);
 			}
 		});
-		console.log(intVerts);
+
+		let lineGeometry = new THREE.Geometry();
+		lineGeometry.vertices = intVerts;
+		return lineGeometry;
 
 	}
 
@@ -361,12 +365,11 @@ class OLAPFramework {
 		}
 	}
 
-	// relies on 
 	getAllMeshes(geom, addTo) {
 		if (geom.type == "Mesh") {
 			addTo.push(geom);
 		}
-		if (geom.children.length == 0) {
+		if (typeof geom.children === 'undefined' || geom.children.length == 0) {
 			return;
 		}
 		else {
