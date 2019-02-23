@@ -296,6 +296,108 @@ class SliceManager {
 
 
 
+
+
+
+
+
+
+
+
+
+// todo: get angle based on projection on to plane
+function getAngle(v1, v2) {
+	let theta = Math.atan2(v1.z, v1.y) - Math.atan2(v2.z,  v2.y)
+	return theta;
+}
+
+
+function getVector(p1, p2) {
+	let dir = new THREE.Vector3();
+	dir.subVectors( p2, p1 );
+	return dir.normalize();
+}
+
+function toDeg(rad) {
+	let deg = rad * 57.2958;
+	deg = (deg >= 0) ? deg : (180 + (180 + deg));
+	return deg;
+}
+
+
+
+function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
+
+	// let geometry = new THREE.PlaneGeometry( 5000, 2000, 32 );
+	// let material = new THREE.MeshBasicMaterial( {color: 0x405360, side: THREE.DoubleSide, transparent: true, opacity: 0.6 } );
+	// let plane = new THREE.Mesh( geometry, material );
+	// plane.position.set(c.x, c.y, c.z);
+	// plane.lookAt(c.clone().add(n));
+	// scene.add(plane);
+
+	// c.x *= 1.1;
+	// let point = c;
+	// let raycaster = new THREE.Raycaster(point, n.clone().negate());
+	// let hits = raycaster.intersectObject(plane ,true);
+	// let pointOnPlane = hits[0].point;
+	// console.log(pointOnPlane);
+	// addLine(point, pointOnPlane);
+
+	// let gg = new THREE.SphereGeometry( 6, 32, 32 );
+	// let mm = new THREE.MeshStandardMaterial( {color: 0x405360} );
+	// let ss = new THREE.Mesh( gg, mm );
+	// ss.position.set(point.x, point.y, point.z);
+	// scene.add(ss);
+
+	// let gg2 = new THREE.SphereGeometry( 6, 32, 32 );
+	// let mm2 = new THREE.MeshStandardMaterial( {color: 0xff0360} );
+	// let ss2 = new THREE.Mesh( gg2, mm2 );
+	// ss2.position.set(pointOnPlane.x, pointOnPlane.y, pointOnPlane.z);
+	// scene.add(ss2);
+
+	// gg2 = new THREE.SphereGeometry( 6, 32, 32 );
+	// mm2 = new THREE.MeshStandardMaterial( {color: 0x00ff60} );
+	// ss2 = new THREE.Mesh( gg2, mm2 );
+	// ss2.position.set(o.x, o.y, o.z);
+	// scene.add(ss2);
+
+	let ret = [];
+	let vs = [];
+	for (let i = 0; i < pts.length; i++) {
+		vs.push(getVector(pts[i], c));
+	}
+
+	let angs = [ 0 ];
+	for (let i = 1; i < vs.length; i++) {
+		angs.push(toDeg(getAngle(vs[0], vs[i])));
+	}
+
+	let list = [];
+	for (let j = 0; j < pts.length; j++) 
+	    list.push({'pt': pts[j], 'ang': angs[j]});
+
+	list.sort(function(a, b) {
+	    return ((a.ang < b.ang) ? -1 : ((a.ang == b.ang) ? 0 : 1));
+	});
+
+	for (let k = 0; k < list.length; k++) {
+	    pts[k] = list[k].pt;
+	    angs[k] = list[k].ang;
+	}
+
+	ret = pts;
+	return ret;
+}
+
+
+
+
+
+
+
+
+
+
 class OLAPFramework {
 
 
@@ -321,24 +423,23 @@ class OLAPFramework {
 		});
 
 		let intVerts = [];
-		let intVertSet = {};
-		let ptA, ptB, ptC, lnA, lnB, lnC;
-		let p = null;
+		let pt, ln;
 		faces.forEach(f => {
-			p = null;
-			lnA = new THREE.Line3(f[0], f[2]);
-			lnB = new THREE.Line3(f[0], f[1]);
-			lnC = new THREE.Line3(f[1], f[2]);
-			ptA = plane.intersectLine(lnA);
-			ptB = plane.intersectLine(lnB);
-			ptC = plane.intersectLine(lnC);
-			if (typeof ptA !== 'undefined') p = ptA;
-			if (typeof ptB !== 'undefined') p = ptB;
-			if (typeof ptC !== 'undefined') p = ptC;
-			let key = JSON.stringify(p);
-			if (key != 'null' && !(key in intVertSet)) {
-				intVerts.push(p);
-				intVertSet[key] = true;
+			ln = new THREE.Line3(f[0], f[2]);
+			pt = plane.intersectLine(ln);
+			let key = JSON.stringify(pt);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
+			}
+			ln = new THREE.Line3(f[1], f[2]);
+			pt = plane.intersectLine(ln);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
+			}
+			ln = new THREE.Line3(f[0], f[1]);
+			pt = plane.intersectLine(ln);
+			if (typeof pt !== 'undefined') {
+				intVerts.push(pt);
 			}
 		});
 
@@ -347,12 +448,50 @@ class OLAPFramework {
 			throw `Meshes must be solids for slicing.`;
 		}
 
+		let center = new THREE.Vector3();
+		intVerts.forEach(vt => {
+			center.x += vt.x;
+			center.y += vt.y;
+			center.z += vt.z;
 
-		console.log(intVertSet);
-		console.log(intVerts);
+			let gg = new THREE.SphereGeometry( 6, 32, 32 );
+			let mm = new THREE.MeshStandardMaterial( {color: 0xff0360} );
+			let ss = new THREE.Mesh( gg, mm );
+			ss.position.set(vt.x, vt.y, vt.z);
+			scene.add(ss);
+
+		});
+		center.x /= intVerts.length;
+		center.y /= intVerts.length;
+		center.z /= intVerts.length;
+		// todo: check center is contained inside polyline
+		console.log(center);
+
+
+
+		let intVertSet = new Set();
+		let reallocIntVert = [];
+		for(let i=0; i<intVerts.length; i++) {
+			let k = JSON.stringify(intVerts[i]);
+			if (intVertSet.has(k)) continue;
+			reallocIntVert.push(intVerts[i]);
+			intVertSet.add(k);
+		}
+		intVerts = reallocIntVert;
+
+
+		let fin_order = sortPoints(intVerts, center, plane.normal);
+		if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
+			fin_order.push(fin_order[0].clone());
+		}
+
+
+		// console.log(fin_order);
+
+
 
 		let lineGeometry = new THREE.Geometry();
-		lineGeometry.vertices = intVerts;
+		lineGeometry.vertices = fin_order;
 		return lineGeometry;
 
 	}
