@@ -301,23 +301,17 @@ class OLAPFramework {
 
 	intersectPlane(mesh, plane) {
 
-		let meshObj = mesh.parent;
-		// multiply by scaling factor of parent object if its an Object3D
-		if (mesh.parent && mesh.parent.type === "Object3D") {
-			mesh.scale.set(	meshObj.scale.x * mesh.scale.x,
-							meshObj.scale.y * mesh.scale.y,
-							meshObj.scale.z * mesh.scale.z );
-		}
-
 		let meshverts = [];
 
 		let v;
-		mesh.updateMatrixWorld();
 		mesh.geometry.vertices.forEach(vt => {
-			v = vt.clone();
-			v.applyMatrix4(mesh.matrixWorld);
+			v = new THREE.Vector3(	vt.x * mesh.parent.scale.x, 
+									vt.y * mesh.parent.scale.y, 
+									vt.z * mesh.parent.scale.z
+								 );
 			meshverts.push(v);
 		});
+		// console.log(meshverts[0]);
 
 		let faces = [];
 		let face = null;
@@ -327,24 +321,35 @@ class OLAPFramework {
 		});
 
 		let intVerts = [];
+		let intVertSet = {};
+		let ptA, ptB, ptC, lnA, lnB, lnC;
+		let p = null;
 		faces.forEach(f => {
-			let ln, pt;
-			ln = new THREE.Line3(f[0], f[2]);
-			pt = plane.intersectLine(ln);
-			if (typeof pt !== 'undefined') {
-				intVerts.push(pt);
-			}
-			ln = new THREE.Line3(f[0], f[1]);
-			pt = plane.intersectLine(ln);
-			if (typeof pt !== 'undefined') {
-				intVerts.push(pt);
-			}
-			ln = new THREE.Line3(f[1], f[2]);
-			pt = plane.intersectLine(ln);
-			if (typeof pt !== 'undefined') {
-				intVerts.push(pt);
+			p = null;
+			lnA = new THREE.Line3(f[0], f[2]);
+			lnB = new THREE.Line3(f[0], f[1]);
+			lnC = new THREE.Line3(f[1], f[2]);
+			ptA = plane.intersectLine(lnA);
+			ptB = plane.intersectLine(lnB);
+			ptC = plane.intersectLine(lnC);
+			if (typeof ptA !== 'undefined') p = ptA;
+			if (typeof ptB !== 'undefined') p = ptB;
+			if (typeof ptC !== 'undefined') p = ptC;
+			let key = JSON.stringify(p);
+			if (key != 'null' && !(key in intVertSet)) {
+				intVerts.push(p);
+				intVertSet[key] = true;
 			}
 		});
+
+
+		if(intVerts.length < 3) {
+			throw `Meshes must be solids for slicing.`;
+		}
+
+
+		console.log(intVertSet);
+		console.log(intVerts);
 
 		let lineGeometry = new THREE.Geometry();
 		lineGeometry.vertices = intVerts;
@@ -639,6 +644,7 @@ class OLAPFramework {
 		this.sliceManager = new SliceManager();
 		await this.loadedDesign.updateGeom(this.geometry, this.sliceManager);
 		this.scene.add(this.geometry);
+		// console.log(this.geometry);
 
 		this.slices = this.sliceManager.getAllSlicesFromSet(this.geometry);
 		this.scene.add(this.slices);
