@@ -104,7 +104,7 @@ Design.updateGeom = async function(objectContainer, sliceManager) {
 	let g1, g2, g3;
 	let instance = new THREE.Object3D();
 
-	g1 = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 1 ), matMesh_red );
+	g1 = new THREE.Mesh( new THREE.BoxGeometry( 1, 1, 1 ), matMesh_debug );
 	instance.add(g1);
 	// g2 = new THREE.Mesh( new THREE.BoxGeometry( 1.8, 1.4, 0.3 ), matMesh_green );
 	// instance.add(g2);

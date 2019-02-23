@@ -307,7 +307,29 @@ class SliceManager {
 
 // todo: get angle based on projection on to plane
 function getAngle(v1, v2) {
-	let theta = Math.atan2(v1.z, v1.y) - Math.atan2(v2.z,  v2.y)
+	let aV1 = v1.clone();
+	let aV2 = v2.clone();
+	aV1.normalize();
+	aV2.normalize();
+	let theta = Math.acos( aV1.dot(aV2) );
+	let cr = aV1.clone();
+	cr.cross(aV2);
+	let bV1 = v1.clone();
+	let bV2 = v2.clone();
+	bV1.normalize();
+	bV2.normalize();
+	let n = bV1.clone();
+	n.cross(bV2);
+	let d = cr.dot(n);
+	console.log(d);
+	if (d < 0) theta = -theta;
+	// let n = aV1.clone();
+	// n.cross(aV2);
+	// let nPlane = new THREE.Plane();
+	// nPlane.setFromNormalAndCoplanarPoint(n, new THREE.Vector3());
+	// aV1.projectOnPlane(n);
+	// aV2.projectOnPlane(n);
+	// let theta = Math.atan2(aV1.x, aV1.y) - Math.atan2(aV2.x,  v2.y)
 	return theta;
 }
 
@@ -379,6 +401,7 @@ function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
 	list.sort(function(a, b) {
 	    return ((a.ang < b.ang) ? -1 : ((a.ang == b.ang) ? 0 : 1));
 	});
+	console.log(list);
 
 	for (let k = 0; k < list.length; k++) {
 	    pts[k] = list[k].pt;
@@ -481,9 +504,9 @@ class OLAPFramework {
 
 
 		let fin_order = sortPoints(intVerts, center, plane.normal);
-		if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
-			fin_order.push(fin_order[0].clone());
-		}
+		// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
+		// 	fin_order.push(fin_order[0].clone());
+		// }
 
 
 		// console.log(fin_order);
