@@ -545,7 +545,7 @@ class OLAPFramework {
 
 			let lineGeom = new THREE.Geometry();
 			lineGeom.vertices = fin_order;
-
+			let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
 			let line = new THREE.Line(lineGeom, lineMat);
 			scene.add(line);
 		},
