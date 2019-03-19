@@ -63,8 +63,8 @@ class Slice {
 		for (let i = 0; i < m.length; i++) {
 			if(m[i].dontslice) continue;
 			let lineGeom = OLAP.intersectPlane(m[i], this.plane);
-			let line = new THREE.Line(lineGeom, lineMat);
-			boundaryCuts.add(line);
+			// let line = new THREE.Line(lineGeom, lineMat);
+			// boundaryCuts.add(line);
 
 
 
@@ -321,7 +321,7 @@ function getAngle(v1, v2) {
 	let n = bV1.clone();
 	n.cross(bV2);
 	let d = cr.dot(n);
-	console.log(d);
+	// console.log(d);
 	if (d < 0) theta = -theta;
 	// let n = aV1.clone();
 	// n.cross(aV2);
@@ -385,24 +385,28 @@ function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
 
 	let ret = [];
 	let vs = [];
+    // get vectors fron the center to each point
 	for (let i = 0; i < pts.length; i++) {
 		vs.push(getVector(pts[i], c));
 	}
 
+	// calculate angle of each vector from the first one
 	let angs = [ 0 ];
 	for (let i = 1; i < vs.length; i++) {
 		angs.push(toDeg(getAngle(vs[0], vs[i])));
 	}
 
+	// build angle to point mapping
 	let list = [];
 	for (let j = 0; j < pts.length; j++) 
 	    list.push({'pt': pts[j], 'ang': angs[j]});
 
+	// sort points based on angles
 	list.sort(function(a, b) {
 	    return ((a.ang < b.ang) ? -1 : ((a.ang == b.ang) ? 0 : 1));
 	});
-	console.log(list);
 
+	// build return list
 	for (let k = 0; k < list.length; k++) {
 	    pts[k] = list[k].pt;
 	    angs[k] = list[k].ang;
@@ -435,8 +439,9 @@ class OLAPFramework {
 									vt.z * mesh.parent.scale.z
 								 );
 			meshverts.push(v);
+			// meshverts.push(vt.clone());
 		});
-		// console.log(meshverts[0]);
+		// console.log(meshverts.length);
 
 		let faces = [];
 		let face = null;
@@ -444,6 +449,7 @@ class OLAPFramework {
 			face = [meshverts[f.a].clone(), meshverts[f.b].clone(), meshverts[f.c].clone()];
 			faces.push(face);
 		});
+		// console.log(faces);
 
 		let intVerts = [];
 		let pt, ln;
@@ -476,46 +482,92 @@ class OLAPFramework {
 			center.x += vt.x;
 			center.y += vt.y;
 			center.z += vt.z;
-
-			let gg = new THREE.SphereGeometry( 6, 32, 32 );
-			let mm = new THREE.MeshStandardMaterial( {color: 0xff0360} );
-			let ss = new THREE.Mesh( gg, mm );
-			ss.position.set(vt.x, vt.y, vt.z);
-			scene.add(ss);
-
 		});
 		center.x /= intVerts.length;
 		center.y /= intVerts.length;
 		center.z /= intVerts.length;
-		// todo: check center is contained inside polyline
-		console.log(center);
 
+		let gg = new THREE.SphereGeometry( 6, 32, 32 );
+		let mm = new THREE.MeshStandardMaterial( {color: 0xff0000} );
+		let ss = new THREE.Mesh( gg, mm );
+		ss.position.set(center.x, center.y, center.z);
+		scene.add(ss);
+		// todo: check center is contained inside polyline
+		// console.log(center);
 
 
 		let intVertSet = new Set();
 		let reallocIntVert = [];
 		for(let i=0; i<intVerts.length; i++) {
 			let k = JSON.stringify(intVerts[i]);
-			if (intVertSet.has(k)) continue;
-			reallocIntVert.push(intVerts[i]);
-			intVertSet.add(k);
+			if (!intVertSet.has(k)) {
+				reallocIntVert.push(intVerts[i]);
+				intVertSet.add(k);
+			}
 		}
 		intVerts = reallocIntVert;
 
 
-		let fin_order = sortPoints(intVerts, center, plane.normal);
-		// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
-		// 	fin_order.push(fin_order[0].clone());
-		// }
+		var loader = new THREE.FontLoader();
+
+		loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
+
+			let c=0;
+			let fin_order = sortPoints(intVerts, center, plane.normal);
+			fin_order.forEach(vt => {
+
+
+				let gg = new THREE.SphereGeometry( 6, 32, 32 );
+				let mm = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
+				let ss = new THREE.Mesh( gg, mm );
+				ss.position.set(vt.x, vt.y, vt.z);
+				scene.add(ss);
+
+
+				let tt = new THREE.TextGeometry( `${c}`, {
+					font: font,
+					size: 60,
+					height: 10,
+					curveSegments: 12,
+				} );
+				let st = new THREE.Mesh( tt, mm );
+				st.position.set(vt.x, vt.y, vt.z);
+				scene.add(st);
+
+
+				c++;
+			});
+			console.log(fin_order);
+			// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
+			// 	fin_order.push(fin_order[0].clone());
+			// }
+
+
+			let lineGeom = new THREE.Geometry();
+			lineGeom.vertices = fin_order;
+
+			let line = new THREE.Line(lineGeom, lineMat);
+			scene.add(line);
+		},
+
+		// onProgress callback
+		function ( xhr ) {
+			console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+		},
+
+		// onError callback
+		function ( err ) {
+			console.error(err);
+		} );
+
 
 
 		// console.log(fin_order);
 
 
 
-		let lineGeometry = new THREE.Geometry();
-		lineGeometry.vertices = fin_order;
-		return lineGeometry;
+		// return lineGeometry;
+		return null;
 
 	}
 
