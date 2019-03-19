@@ -311,25 +311,11 @@ function getAngle(v1, v2) {
 	let aV2 = v2.clone();
 	aV1.normalize();
 	aV2.normalize();
+	let dot = aV1.dot(aV2);
 	let theta = Math.acos( aV1.dot(aV2) );
 	let cr = aV1.clone();
 	cr.cross(aV2);
-	let bV1 = v1.clone();
-	let bV2 = v2.clone();
-	bV1.normalize();
-	bV2.normalize();
-	let n = bV1.clone();
-	n.cross(bV2);
-	let d = cr.dot(n);
-	// console.log(d);
-	if (d < 0) theta = -theta;
-	// let n = aV1.clone();
-	// n.cross(aV2);
-	// let nPlane = new THREE.Plane();
-	// nPlane.setFromNormalAndCoplanarPoint(n, new THREE.Vector3());
-	// aV1.projectOnPlane(n);
-	// aV2.projectOnPlane(n);
-	// let theta = Math.atan2(aV1.x, aV1.y) - Math.atan2(aV2.x,  v2.y)
+	if(cr.x < 0) theta = (2 * Math.PI) - theta;
 	return theta;
 }
 
@@ -349,39 +335,6 @@ function toDeg(rad) {
 
 
 function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
-
-	// let geometry = new THREE.PlaneGeometry( 5000, 2000, 32 );
-	// let material = new THREE.MeshBasicMaterial( {color: 0x405360, side: THREE.DoubleSide, transparent: true, opacity: 0.6 } );
-	// let plane = new THREE.Mesh( geometry, material );
-	// plane.position.set(c.x, c.y, c.z);
-	// plane.lookAt(c.clone().add(n));
-	// scene.add(plane);
-
-	// c.x *= 1.1;
-	// let point = c;
-	// let raycaster = new THREE.Raycaster(point, n.clone().negate());
-	// let hits = raycaster.intersectObject(plane ,true);
-	// let pointOnPlane = hits[0].point;
-	// console.log(pointOnPlane);
-	// addLine(point, pointOnPlane);
-
-	// let gg = new THREE.SphereGeometry( 6, 32, 32 );
-	// let mm = new THREE.MeshStandardMaterial( {color: 0x405360} );
-	// let ss = new THREE.Mesh( gg, mm );
-	// ss.position.set(point.x, point.y, point.z);
-	// scene.add(ss);
-
-	// let gg2 = new THREE.SphereGeometry( 6, 32, 32 );
-	// let mm2 = new THREE.MeshStandardMaterial( {color: 0xff0360} );
-	// let ss2 = new THREE.Mesh( gg2, mm2 );
-	// ss2.position.set(pointOnPlane.x, pointOnPlane.y, pointOnPlane.z);
-	// scene.add(ss2);
-
-	// gg2 = new THREE.SphereGeometry( 6, 32, 32 );
-	// mm2 = new THREE.MeshStandardMaterial( {color: 0x00ff60} );
-	// ss2 = new THREE.Mesh( gg2, mm2 );
-	// ss2.position.set(o.x, o.y, o.z);
-	// scene.add(ss2);
 
 	let ret = [];
 	let vs = [];
@@ -519,6 +472,7 @@ class OLAPFramework {
 
 			let c=0;
 			let fin_order = sortPoints(intVerts, center, plane.normal);
+			fin_order.push(fin_order[0].clone());
 			fin_order.forEach(vt => {
 
 
