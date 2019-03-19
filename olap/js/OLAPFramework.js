@@ -398,13 +398,18 @@ function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
 
 	// build angle to point mapping
 	let list = [];
-	for (let j = 0; j < pts.length; j++) 
+	for (let j = 0; j < pts.length; j++) {
 	    list.push({'pt': pts[j], 'ang': angs[j]});
+	}
 
 	// sort points based on angles
 	list.sort(function(a, b) {
 	    return ((a.ang < b.ang) ? -1 : ((a.ang == b.ang) ? 0 : 1));
 	});
+
+	for (let j = 0; j < list.length; j++) {
+	    console.log(`${list[j].ang.toFixed(2)}\t(${list[j].pt.x.toFixed(2)},${list[j].pt.y.toFixed(2)},${list[j].pt.z.toFixed(2)})`);
+	}
 
 	// build return list
 	for (let k = 0; k < list.length; k++) {
@@ -524,7 +529,7 @@ class OLAPFramework {
 				scene.add(ss);
 
 
-				let tt = new THREE.TextGeometry( `${c}`, {
+				let tt = new THREE.TextGeometry( `${c}|(${vt.x.toFixed(2)},${vt.y.toFixed(2)},${vt.z.toFixed(2)})`, {
 					font: font,
 					size: 60,
 					height: 10,
@@ -537,7 +542,7 @@ class OLAPFramework {
 
 				c++;
 			});
-			console.log(fin_order);
+			// console.log(fin_order);
 			// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
 			// 	fin_order.push(fin_order[0].clone());
 			// }
@@ -552,7 +557,7 @@ class OLAPFramework {
 
 		// onProgress callback
 		function ( xhr ) {
-			console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+			// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
 		},
 
 		// onError callback
