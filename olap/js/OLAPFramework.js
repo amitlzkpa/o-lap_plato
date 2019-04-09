@@ -379,6 +379,40 @@ function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
 
 
 
+// ref: https://bocoup.com/blog/learning-three-js-with-real-world-challenges-that-have-already-been-solved
+function makeTextSprite(message, opts) {
+	let parameters = opts || {};
+	let fontface = parameters.fontface || 'Helvetica';
+	let fontsize = parameters.fontsize || 60;
+	let canvas = document.createElement('canvas');
+	canvas.width  = 800;
+	canvas.height = 200;
+	let context = canvas.getContext('2d');
+	context.font = fontsize + "px " + fontface;
+
+	// get size data (height depends only on font size)
+	let metrics = context.measureText(message);
+	let textWidth = metrics.width;
+	// canvas.width  = textWidth;
+
+	// text color
+	context.fillStyle = 'rgba(0, 0, 0, 1.0)';
+	context.fillText(message, 0, fontsize);
+
+	// canvas contents will be used for a texture
+	let texture = new THREE.Texture(canvas)
+	texture.minFilter = THREE.LinearFilter;
+	texture.needsUpdate = true;
+
+	let spriteMaterial = new THREE.SpriteMaterial({
+		map: texture,
+		useScreenCoordinates: false
+	});
+	let sprite = new THREE.Sprite(spriteMaterial);
+	sprite.scale.set(100, 50, 1.0);
+	return sprite;
+}
+
 
 
 
@@ -388,6 +422,7 @@ class OLAPFramework {
 
 	intersectPlane(mesh, plane) {
 
+		// let meshverts = mesh.geometry.vertices;
 		let meshverts = [];
 
 		let v;
@@ -397,24 +432,21 @@ class OLAPFramework {
 									vt.z * mesh.parent.scale.z
 								 );
 			meshverts.push(v);
-			// meshverts.push(vt.clone());
 		});
-		// console.log(meshverts.length);
 
 		let faces = [];
 		let face = null;
 		mesh.geometry.faces.forEach(f => {
-			face = [meshverts[f.a].clone(), meshverts[f.b].clone(), meshverts[f.c].clone()];
+			face = [meshverts[f.a], meshverts[f.b], meshverts[f.c]];
 			faces.push(face);
 		});
-		// console.log(faces);
 
 		let intVerts = [];
 		let pt, ln;
 		faces.forEach(f => {
 			ln = new THREE.Line3(f[0], f[2]);
 			pt = plane.intersectLine(ln);
-			let key = JSON.stringify(pt);
+			// let key = JSON.stringify(pt);
 			if (typeof pt !== 'undefined') {
 				intVerts.push(pt);
 			}
@@ -434,6 +466,7 @@ class OLAPFramework {
 		if(intVerts.length < 3) {
 			throw `Meshes must be solids for slicing.`;
 		}
+
 
 		let center = new THREE.Vector3();
 		intVerts.forEach(vt => {
@@ -466,66 +499,43 @@ class OLAPFramework {
 		intVerts = reallocIntVert;
 
 
-		var loader = new THREE.FontLoader();
-
-		loader.load( 'fonts/helvetiker_regular.typeface.json', function ( font ) {
-
-			let c=0;
-			let fin_order = sortPoints(intVerts, center, plane.normal);
-			fin_order.push(fin_order[0].clone());
-			fin_order.forEach(vt => {
 
 
-				let gg = new THREE.SphereGeometry( 6, 32, 32 );
-				let mm = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
-				let ss = new THREE.Mesh( gg, mm );
-				ss.position.set(vt.x, vt.y, vt.z);
-				scene.add(ss);
+		let c=0;
+		let fin_order = sortPoints(intVerts, center, plane.normal);
+		fin_order.push(fin_order[0].clone());
+		fin_order.forEach(vt => {
 
 
-				let tt = new THREE.TextGeometry( `${c}|(${vt.x.toFixed(2)},${vt.y.toFixed(2)},${vt.z.toFixed(2)})`, {
-					font: font,
-					size: 60,
-					height: 10,
-					curveSegments: 12,
-				} );
-				let st = new THREE.Mesh( tt, mm );
-				st.position.set(vt.x, vt.y, vt.z);
-				scene.add(st);
+			let gg = new THREE.SphereGeometry( 6, 32, 32 );
+			let mm = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
+			let ss = new THREE.Mesh( gg, mm );
+			ss.position.set(vt.x, vt.y, vt.z);
+			scene.add(ss);
 
 
-				c++;
-			});
-			// console.log(fin_order);
-			// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
-			// 	fin_order.push(fin_order[0].clone());
-			// }
+			let tt = `${c}|(${vt.x.toFixed(2)},${vt.y.toFixed(2)},${vt.z.toFixed(2)})`;
+			let st = makeTextSprite(tt);
+			st.position.set(vt.x, vt.y, vt.z);
+			scene.add(st);
 
 
-			let lineGeom = new THREE.Geometry();
-			lineGeom.vertices = fin_order;
-			let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
-			let line = new THREE.Line(lineGeom, lineMat);
-			scene.add(line);
-		},
-
-		// onProgress callback
-		function ( xhr ) {
-			// console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-		},
-
-		// onError callback
-		function ( err ) {
-			console.error(err);
-		} );
-
-
-
+			c++;
+		});
 		// console.log(fin_order);
+		// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
+		// 	fin_order.push(fin_order[0].clone());
+		// }
+
+
+		let lineGeom = new THREE.Geometry();
+		lineGeom.vertices = fin_order;
+		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+		let line = new THREE.Line(lineGeom, lineMat);
+		scene.add(line);
 
 
 
-		// return lineGeometry;
 		return null;
 
 	}
@@ -559,8 +569,8 @@ class OLAPFramework {
 
 	async checkMessage() {
 	    try {
-			var url = "https://gitcdn.xyz/repo/O-LAP/home/master/olap/js/info.json";
-			var infoJSON = await $.getJSON(url);
+			let url = "https://gitcdn.xyz/repo/O-LAP/home/master/olap/js/info.json";
+			let infoJSON = await $.getJSON(url);
 			if(this.version != infoJSON.latest_version) {
 				console.log(`${infoJSON.latest_version} is available. Consider upgrading the framework.`);
 			}
@@ -773,7 +783,7 @@ class OLAPFramework {
 	}
 
 	async loadUI(gitAuthor, gitRepo) {
-		var params = this.loadedDesign.inputs;
+		let params = this.loadedDesign.inputs;
 		this.$name.text(this.loadedDesign.info.name);
 		this.$designer.text(this.loadedDesign.info.designer);
 		this.$designmessage.text(this.loadedDesign.info.message);
@@ -808,9 +818,9 @@ class OLAPFramework {
 		this.scene.remove(this.slices);
 		this.geometry = new THREE.Object3D();
 		this.bounds = new THREE.Object3D();
-		var inpStateCopy = {};													// make a copy of input state to pass it to design object
-		for(var key in this.inputVals) {
-		    var value = this.inputVals[key];
+		let inpStateCopy = {};													// make a copy of input state to pass it to design object
+		for(let key in this.inputVals) {
+		    let value = this.inputVals[key];
 		    inpStateCopy[key] = value;
 		}
 		this.loadedDesign.inputState = inpStateCopy;
@@ -831,15 +841,16 @@ class OLAPFramework {
 			return;
 		}
 		let tipTxt = "";
+		let html, fw, r;
 		switch(inpConfig.type) {
 			case "select":
 				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
-				var html = `<div class="input-field" id="${id}"><select>\n`;
+				html = `<div class="input-field" id="${id}"><select>\n`;
 				for(let s of inpConfig.choices) { html += `<option value="${s}">${s}</option>\n`; }
 				html += `</select><label>${inpConfig.label}</label></div>\n${tipTxt}\n`;
-				var p = this.$ui.append(html);
+				let p = this.$ui.append(html);
 				$('select').formSelect();										// materilize initialization
-				var fw = this;													// cache ref to framework for passing it to the event listening registration
+				fw = this;													// cache ref to framework for passing it to the event listening registration
 				p.find('#' + id).on('change', async function(e){
 					fw.inputVals[id] = $('#'+id + ' :selected').text();			// update curr state
 					await fw.updateGeom();											// trigger an update
@@ -847,7 +858,7 @@ class OLAPFramework {
 				break;
 			case "slider":
 				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
-				var html = `
+				html = `
 						    <div class="range-field">
 							  <p>${inpConfig.label}</p>
 							  <span class="left">${inpConfig.min}</span>
@@ -856,8 +867,8 @@ class OLAPFramework {
 							  ${tipTxt}
 						    </div>
 							`;
-				var q = this.$ui.append(html);
-				var fw = this;													// cache ref to framework for passing it to the event listening registration
+				let q = this.$ui.append(html);
+				fw = this;													// cache ref to framework for passing it to the event listening registration
 				q.find('#' + id).on('input', async function(e){
 					fw.inputVals[id] = $(this).val();							// update curr state
 					await fw.updateGeom();										// trigger an update
@@ -865,7 +876,7 @@ class OLAPFramework {
 				break;
 			case "bool":
 				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
-				var html = `
+				html = `
 						    <p>
 						      <label>
 						        <input type='checkbox' id="${id}"/>
@@ -874,8 +885,8 @@ class OLAPFramework {
 							  ${tipTxt}
 						    </p>
 						    `;
-				var r = this.$ui.append(html);
-				var fw = this;													// cache ref to framework for passing it to the event listening registration
+				r = this.$ui.append(html);
+				fw = this;													// cache ref to framework for passing it to the event listening registration
 				r.find("#" + id).on('change', async function(e){
 					fw.inputVals[id] = $(this).is(":checked");					// update curr state
 					await fw.updateGeom();										// trigger an update
@@ -883,7 +894,7 @@ class OLAPFramework {
 				break;
 			case "text":
 				tipTxt = (typeof inpConfig.tip !== 'undefined') ? `<span class="grey-text">${inpConfig.tip}</span></br>` : "";
-				var html = `
+				html = `
 						    <p>
 						      <label>
 						        <input type='text' id="${id}"/>
@@ -892,8 +903,8 @@ class OLAPFramework {
 							  ${tipTxt}
 						    </p>
 						    `;
-				var r = this.$ui.append(html);
-				var fw = this;													// cache ref to framework for passing it to the event listening registration
+				r = this.$ui.append(html);
+				fw = this;													// cache ref to framework for passing it to the event listening registration
 				r.find("#" + id).on('input', async function(e){
 					fw.inputVals[id] = $(this).val();							// update curr state
 					await fw.updateGeom();										// trigger an update
