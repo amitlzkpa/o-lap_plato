@@ -305,8 +305,7 @@ class SliceManager {
 
 
 
-// todo: get angle based on projection on to plane
-function getAngle(v1, v2) {
+function getAngle(v1, v2, refNormal) {
 	let aV1 = v1.clone();
 	let aV2 = v2.clone();
 	aV1.normalize();
@@ -315,7 +314,12 @@ function getAngle(v1, v2) {
 	let theta = Math.acos( aV1.dot(aV2) );
 	let cr = aV1.clone();
 	cr.cross(aV2);
-	if(cr.x < 0) theta = (2 * Math.PI) - theta;
+	// use planenormal as reference to determine direction
+	let nn = refNormal.clone();
+	nn.normalize();
+	cr.normalize();
+	let m = cr.dot(nn);
+	if(m < 0) theta = (2 * Math.PI) - theta;
 	return theta;
 }
 
@@ -334,7 +338,7 @@ function toDeg(rad) {
 
 
 
-function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
+function sortPoints(pts, c, n) {
 
 	let ret = [];
 	let vs = [];
@@ -346,7 +350,7 @@ function sortPoints(pts, c, n = new THREE.Vector3(0, 1, 0)) {
 	// calculate angle of each vector from the first one
 	let angs = [ 0 ];
 	for (let i = 1; i < vs.length; i++) {
-		angs.push(toDeg(getAngle(vs[0], vs[i])));
+		angs.push(toDeg(getAngle(vs[0], vs[i], n)));
 	}
 
 	// build angle to point mapping
