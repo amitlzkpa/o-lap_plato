@@ -222,7 +222,7 @@ class SliceSet {
 			s.cutBoundaryLines(geoms);
 			// s.cutGrooveLines(otherSliceSet);
 			if(this.debug) {
-				retObj.add(s.dispPlane);
+				// retObj.add(s.dispPlane);
 				retObj.add(s.debugViz);
 			}
 			retObj.add(s.getInPosSliceObject());
@@ -285,7 +285,7 @@ class SliceManager {
 			// flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geoms, this.sliceSetV));
 		}
 		if(this.sliceSetV != null) {
-			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geoms, this.sliceSetU));
+			// inPosSlices.add(this.sliceSetV.getAllInPosSlices(geoms, this.sliceSetU));
 			// flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geoms, this.sliceSetU));
 		}
 		retObj.add(inPosSlices);
@@ -364,9 +364,9 @@ function sortPoints(pts, c, n) {
 	    return ((a.ang < b.ang) ? -1 : ((a.ang == b.ang) ? 0 : 1));
 	});
 
-	for (let j = 0; j < list.length; j++) {
-	    console.log(`${list[j].ang.toFixed(2)}\t(${list[j].pt.x.toFixed(2)},${list[j].pt.y.toFixed(2)},${list[j].pt.z.toFixed(2)})`);
-	}
+	// for (let j = 0; j < list.length; j++) {
+	//     console.log(`${list[j].ang.toFixed(2)}\t(${list[j].pt.x.toFixed(2)},${list[j].pt.y.toFixed(2)},${list[j].pt.z.toFixed(2)})`);
+	// }
 
 	// build return list
 	for (let k = 0; k < list.length; k++) {
@@ -387,10 +387,12 @@ function sortPoints(pts, c, n) {
 function makeTextSprite(message, opts) {
 	let parameters = opts || {};
 	let fontface = parameters.fontface || 'Helvetica';
-	let fontsize = parameters.fontsize || 60;
+	let fontsize = parameters.fontsize || 20;
+	let canvassize = parameters.canvassize || 100;
 	let canvas = document.createElement('canvas');
-	canvas.width  = 800;
-	canvas.height = 200;
+	let scFactor = 5;
+	canvas.width  = canvassize * scFactor;
+	canvas.height = canvassize;
 	let context = canvas.getContext('2d');
 	context.font = fontsize + "px " + fontface;
 
@@ -413,7 +415,7 @@ function makeTextSprite(message, opts) {
 		useScreenCoordinates: false
 	});
 	let sprite = new THREE.Sprite(spriteMaterial);
-	sprite.scale.set(100, 50, 1.0);
+	sprite.scale.set(canvassize * scFactor, canvassize, 1.0);
 	return sprite;
 }
 
@@ -520,7 +522,10 @@ class OLAPFramework {
 
 			let tt = `${c}|(${vt.x.toFixed(2)},${vt.y.toFixed(2)},${vt.z.toFixed(2)})`;
 			let st = makeTextSprite(tt);
-			st.position.set(vt.x, vt.y, vt.z);
+			let offsetX = 120;
+			let offsetY = -20;
+			let offsetZ = 30;
+			st.position.set(vt.x+offsetX, vt.y+offsetY, vt.z+offsetZ);
 			scene.add(st);
 
 
