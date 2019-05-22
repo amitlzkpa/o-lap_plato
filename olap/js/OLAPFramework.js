@@ -285,7 +285,7 @@ class SliceManager {
 			// flatSlices.add(this.sliceSetU.getAllFlattenedSlices(geoms, this.sliceSetV));
 		}
 		if(this.sliceSetV != null) {
-			// inPosSlices.add(this.sliceSetV.getAllInPosSlices(geoms, this.sliceSetU));
+			inPosSlices.add(this.sliceSetV.getAllInPosSlices(geoms, this.sliceSetU));
 			// flatSlices.add(this.sliceSetV.getAllFlattenedSlices(geoms, this.sliceSetU));
 		}
 		retObj.add(inPosSlices);
@@ -467,7 +467,6 @@ class OLAPFramework {
 				intVerts.push(pt);
 			}
 		});
-
 
 		if(intVerts.length < 3) {
 			throw `Meshes must be solids for slicing.`;
@@ -652,7 +651,8 @@ class OLAPFramework {
 		let exp = new THREE.Object3D();
 		let g = OLAP.geometry.clone();
 		exp.add(g);
-		exp.add(OLAP.sliceManager.getAllSlicesFromSet(g));
+		let s = OLAP.sliceManager.getAllSlicesFromSet(g);
+		exp.add(s);
         let result = exporter.parse( exp );
         let file = new File([result], `olap_${this.loadedDesign.info.name}.obj`, {type: "text/plain"});
         saveAs(file);
@@ -952,12 +952,12 @@ class OLAPFramework {
 
 
 
-async function go() {
+async function main() {
 	OLAP = new OLAPFramework();
 	await OLAP.init();
 }
 
 
 
-go();
+main();
 
