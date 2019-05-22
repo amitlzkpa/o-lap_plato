@@ -1,4 +1,42 @@
 
+function addPointLabels(pts, opts) {
+	let c=0;
+	pts.forEach(pt => {
+
+
+		let gg = new THREE.SphereGeometry( 6, 32, 32 );
+		let mm = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
+		let ss = new THREE.Mesh( gg, mm );
+		ss.position.set(pt.x, pt.y, pt.z);
+		scene.add(ss);
+
+
+		let tt = `${c}|(${pt.x.toFixed(2)},${pt.y.toFixed(2)},${pt.z.toFixed(2)})`;
+		let st = makeTextSprite(tt);
+		let offsetX = 0;
+		let offsetY = 0;
+		let offsetZ = 0;
+		st.position.set(pt.x+offsetX, pt.y+offsetY, pt.z+offsetZ);
+		scene.add(st);
+
+
+		c++;
+	});
+
+
+	let withLine = opts.withLine || true;
+	if (withLine) {
+		let lineGeom = new THREE.Geometry();
+		lineGeom.vertices = pts;
+		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+		let line = new THREE.Line(lineGeom, lineMat);
+		scene.add(line);
+	}
+
+
+}
+
+
 
 function rotPointAroundCentre(point, center, axis, theta){
     point.sub(center);
@@ -306,21 +344,28 @@ class SliceManager {
 
 
 function getAngle(v1, v2, refNormal) {
+
 	let aV1 = v1.clone();
 	let aV2 = v2.clone();
 	aV1.normalize();
 	aV2.normalize();
 	let dot = aV1.dot(aV2);
-	let theta = Math.acos( aV1.dot(aV2) );
-	let cr = aV1.clone();
-	cr.cross(aV2);
-	// use planenormal as reference to determine direction
-	let nn = refNormal.clone();
-	nn.normalize();
-	cr.normalize();
-	let m = cr.dot(nn);
-	if(m < 0) theta = (2 * Math.PI) - theta;
-	return theta;
+	// cap dot value between -1 and 1 (float math error)
+	dot = dot < -1 ? -1 : dot > 1 ? 1 : dot
+
+	let bV1 = v1.clone();
+	let bV2 = v2.clone();
+	bV1.normalize();
+	bV2.normalize();
+	let crs = bV1.cross(bV2);
+	crs.normalize();
+
+	let sameDir = crs.equals(refNormal);
+	let theta = Math.acos(dot);
+	if(!sameDir) theta = (2 * Math.PI) - theta;
+	let ang = toDeg(theta);
+
+	return ang;
 }
 
 
@@ -350,7 +395,8 @@ function sortPoints(pts, c, n) {
 	// calculate angle of each vector from the first one
 	let angs = [ 0 ];
 	for (let i = 1; i < vs.length; i++) {
-		angs.push(toDeg(getAngle(vs[0], vs[i], n)));
+		let ang = getAngle(vs[0], vs[i], n);
+		angs.push(ang);
 	}
 
 	// build angle to point mapping
@@ -452,7 +498,6 @@ class OLAPFramework {
 		faces.forEach(f => {
 			ln = new THREE.Line3(f[0], f[2]);
 			pt = plane.intersectLine(ln);
-			// let key = JSON.stringify(pt);
 			if (typeof pt !== 'undefined') {
 				intVerts.push(pt);
 			}
@@ -504,43 +549,15 @@ class OLAPFramework {
 		intVerts = reallocIntVert;
 
 
-
-
-		let c=0;
 		let fin_order = sortPoints(intVerts, center, plane.normal);
 		fin_order.push(fin_order[0].clone());
-		fin_order.forEach(vt => {
-
-
-			let gg = new THREE.SphereGeometry( 6, 32, 32 );
-			let mm = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
-			let ss = new THREE.Mesh( gg, mm );
-			ss.position.set(vt.x, vt.y, vt.z);
-			scene.add(ss);
-
-
-			let tt = `${c}|(${vt.x.toFixed(2)},${vt.y.toFixed(2)},${vt.z.toFixed(2)})`;
-			let st = makeTextSprite(tt);
-			let offsetX = 120;
-			let offsetY = -20;
-			let offsetZ = 30;
-			st.position.set(vt.x+offsetX, vt.y+offsetY, vt.z+offsetZ);
-			scene.add(st);
-
-
-			c++;
-		});
+		addPointLabels(fin_order, {withLine: true});
 		// console.log(fin_order);
+
+
 		// if(JSON.stringify(fin_order[0]) != JSON.stringify(fin_order[fin_order.length-1])) {
 		// 	fin_order.push(fin_order[0].clone());
 		// }
-
-
-		let lineGeom = new THREE.Geometry();
-		lineGeom.vertices = fin_order;
-		let lineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
-		let line = new THREE.Line(lineGeom, lineMat);
-		scene.add(line);
 
 
 

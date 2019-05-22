@@ -117,8 +117,8 @@ Design.updateGeom = async function(objectContainer, sliceManager) {
 	instance.scale.y = 600;
 	objectContainer.add(instance);
 
-	sliceManager.addSliceSet({uDir: false, start: -200, end: 200, cuts: 1});
-	// sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 2});
+	sliceManager.addSliceSet({uDir: true, start: -20, end: 200, cuts: 1});
+	// sliceManager.addSliceSet({uDir: false, start: -300, end: 300, cuts: 3});
 
 	instance.scale.x = parseInt(Design.inputState.width);
 	instance.scale.z = parseInt(Design.inputState.breadth);
