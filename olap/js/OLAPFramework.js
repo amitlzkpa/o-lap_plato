@@ -223,28 +223,8 @@ class SliceSet {
 		let thisSliceSetName = this.name;
 		for (let i = 0; i < this.slices.length; i++) {
 
-			let txtLblMat = new THREE.MeshBasicMaterial({color: 0xff0000});
 
 			let labelTxt = `${thisSliceSetName}_${i}`;
-			console.log(labelTxt);
-			let textGeo = new THREE.TextGeometry( labelTxt, {
-				font: OLAP.font,
-				size: 80,
-				height: 5,
-				curveSegments: 12,
-				bevelEnabled: true,
-				bevelThickness: 10,
-				bevelSize: 8,
-				bevelOffset: 0,
-				bevelSegments: 5
-			} );
-
-			textGeo = new THREE.BufferGeometry().fromGeometry( textGeo );
-			let textMesh = new THREE.Mesh( textGeo, txtLblMat );
-			retObj.add(textMesh);
-
-
-
 
 
 			let s = this.slices[i];
@@ -255,9 +235,34 @@ class SliceSet {
 				retObj.add(s.debugViz);
 			}
 			let flattenedSliceObj = s.getFlattenedSliceObject();
+
+
+			let txtLblMat = new THREE.MeshBasicMaterial({color: 0xff0000});
+			let textGeo = new THREE.TextGeometry( labelTxt, {
+																font: OLAP.font,
+																size: 40,
+																height: 0
+															} );
+			textGeo = new THREE.BufferGeometry().fromGeometry( textGeo );
+			let textMesh = new THREE.Mesh( textGeo, txtLblMat );
+			textMesh.rotation.x = -Math.PI/2;
+			// textMesh.position.x = i * 1000;
+			textMesh.position.y = -140;
+			textMesh.position.z = -140;
+			// if (this.name.includes("V")) textMesh.position.z = 1000;
+			flattenedSliceObj.add(textMesh);
+
+
 			flattenedSliceObj.position.x = i * 1000;
 			if (this.name.includes("V")) flattenedSliceObj.position.z = 1000;
+			flattenedSliceObj.userData.label = labelTxt;
+
+
 			retObj.add(flattenedSliceObj);
+
+
+
+
 		}
 		return retObj;
 	}
