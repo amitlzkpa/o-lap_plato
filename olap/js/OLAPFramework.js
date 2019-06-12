@@ -247,7 +247,7 @@ class SliceSet {
 			let textMesh = new THREE.Mesh( textGeo, txtLblMat );
 			textMesh.rotation.x = -Math.PI/2;
 			// textMesh.position.x = i * 1000;
-			textMesh.position.y = -140;
+			// textMesh.position.y = -140;
 			textMesh.position.z = -140;
 			// if (this.name.includes("V")) textMesh.position.z = 1000;
 			flattenedSliceObj.add(textMesh);
