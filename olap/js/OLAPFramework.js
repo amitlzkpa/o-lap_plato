@@ -220,7 +220,33 @@ class SliceSet {
 
 	getAllFlattenedSlices(geom, otherSliceSet) {
 		let retObj = new THREE.Object3D();
+		let thisSliceSetName = this.name;
 		for (let i = 0; i < this.slices.length; i++) {
+
+			let txtLblMat = new THREE.MeshBasicMaterial({color: 0xff0000});
+
+			let labelTxt = `${thisSliceSetName}_${i}`;
+			console.log(labelTxt);
+			let textGeo = new THREE.TextGeometry( labelTxt, {
+				font: OLAP.font,
+				size: 80,
+				height: 5,
+				curveSegments: 12,
+				bevelEnabled: true,
+				bevelThickness: 10,
+				bevelSize: 8,
+				bevelOffset: 0,
+				bevelSegments: 5
+			} );
+
+			textGeo = new THREE.BufferGeometry().fromGeometry( textGeo );
+			let textMesh = new THREE.Mesh( textGeo, txtLblMat );
+			retObj.add(textMesh);
+
+
+
+
+
 			let s = this.slices[i];
 			s.cutBoundaryLines(geom);
 			s.cutGrooveLines(otherSliceSet);
@@ -426,6 +452,14 @@ class OLAPFramework {
 	}
 
 	async init() {
+
+		let fL = new THREE.FontLoader();
+		let that = this;
+		this.font = null;
+		fL.load( 'olap/fonts/helvetiker_regular.typeface.json', function ( font ) {
+			that.font = font;
+		} );
+
 		this.version = "1.0.0";
 		this.scene = scene;
 		this.inputs = {};
